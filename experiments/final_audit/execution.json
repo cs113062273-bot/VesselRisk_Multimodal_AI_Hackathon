@@ -1,0 +1,19 @@
+{
+  "protocol_sha256": "ae38786a707528988667486c8dc1664908b334c2b12b0a349fd7b90efd40d072",
+  "runner_sha256": "44ab4debb4776d7338e924e9d5f25bd55c7bef1007a25bb5bc53e2e7b479206e",
+  "frozen_artifacts": {
+    "CAD.joblib": "2189859ea60e08e87ef82307e68e6a524a3ed4a478ad88130d1fa93897af84f8",
+    "evidence.json": "52587f2f55ad4dfa1d48bb57518b13ddfe9d8b770ac899c3c5c3e0cf88e96fae",
+    "LAD.joblib": "1cdec7d46751a937919fa186451d4499a4e8601cc26943817df40d19946f7931",
+    "LCX.joblib": "37af871247cc5059402163ad66ba256b53114910519b7c0b649fd8c841c59ca7",
+    "ood.joblib": "c83a058b1130c375837ca200f542a037ee699bb9ffbc045c329ab3f29e0d7cf7",
+    "RCA.joblib": "f9c02107e2dd136e06a47344bae72892e8c88a95c9c0bc335d9d8110546ad8fc",
+    "registry.json": "74d8323d9057c3e95a898dbb829e76cccaf9c97a79fe507843657b3cac2432f3"
+  },
+  "libraries": {
+    "catboost": "1.2.8",
+    "numpy": "2.2.6",
+    "scikit-learn": "1.7.1",
+    "xgboost": "3.4.1"
+  }
+}

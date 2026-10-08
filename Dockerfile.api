@@ -1,0 +1,12 @@
+FROM python:3.13-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY ml ml
+COPY api api
+COPY data data
+COPY experiments experiments
+COPY report report
+COPY extention+of+z+alizadeh+sani+dataset extention+of+z+alizadeh+sani+dataset
+EXPOSE 8000
+CMD ["python","-m","uvicorn","api.main:app","--host","0.0.0.0","--port","8000"]

@@ -1,0 +1,2 @@
+# Audit-only dependency, not imported by the app or production training.
+catboost==1.2.8

@@ -1,0 +1,42 @@
+/* Clinical data needs readable contrast, including quiet supporting labels. */
+.projected-label{position:absolute;top:0;left:0;z-index:7;font-size:10px;padding:6px 9px;transform:none;box-shadow:0 4px 20px #071c2c55}
+.clinical-field>span:first-child{font-size:10px;color:#536f80}
+.observed-range{color:#839aa8;font-size:8px}
+.case-picker p{color:#728a99;font-size:10px}
+.case-picker>label{color:#617f91;font-size:10px}
+.input-tabs button{font-size:10px;color:#698593}
+.input-footer>p{color:#688493;font-size:9px}
+.leakage-seal p{color:#6d8e85;font-size:9px}
+.risk-overview button>span{color:#5f7e90;font-size:10px}
+.risk-overview button>small{color:#7c96a5;font-size:8px}
+.explanation-content>.eyebrow{color:#5d7e8f;font-size:9px}
+.target-name{color:#3c6177}
+.detail-probability>span{color:#728d9c;font-size:9px}
+.range-display>div:first-child{color:#698798;font-size:9px}
+.range-display b{color:#517385;font-size:9px}
+.range-display p{color:#7e95a3;font-size:8px}
+.contribution-heading{color:#748e9d;font-size:7px}
+.contribution-row strong{font-size:10px;color:#577789}
+.contribution-row>div:first-child>span{font-size:8px;color:#829aa7}
+.contribution-row>b{font-size:9px}
+.explain-section-title h3{font-size:11px}
+.explanation-content>.fine-print{font-size:8px;color:#718c9b}
+.shap-total{font-size:8px;color:#6a8999}
+.agreement-list>div{font-size:9px;color:#658393}
+.agreement-list b{font-size:9px;color:#537788}
+.representation strong{font-size:9px}
+.representation p{font-size:8px;color:#6f9489}
+.text-button{font-size:9px}
+.evidence-link span>span{color:#718d9b;font-size:8px}
+.anatomy-note{color:#87a2b3;font-size:8px}
+.anatomy-credit{color:#7a98aa;font-size:7px}
+.viewer-topline{color:#8faaba;font-size:9px}
+.viewer-hint{color:#a8bfcb;font-size:9px}
+.vessel-selector small{color:#87a9ba;font-size:7px}
+.safety-footer p{font-size:10px;color:#58778a}
+@media(max-width:760px){.clinical-field>span:first-child{font-size:9px}.input-tabs button{font-size:9px}.risk-overview button>span{font-size:8px}.risk-overview button>small{font-size:7px}.viewer-topline{font-size:7px}.viewer-hint{font-size:8px}.contribution-row strong{font-size:11px}.contribution-row>div:first-child>span{font-size:9px}.contribution-row>b{font-size:10px}.explanation-content>.fine-print{font-size:9px}.safety-footer p{font-size:9px}}
+
+/* Match the legend to the three probability colors actually used by the meshes. */
+.color-key>span{display:inline-flex;align-items:center;gap:4px}
+.color-key i{width:7px;height:7px;border-radius:2px}
+.orientation>div{justify-content:center}

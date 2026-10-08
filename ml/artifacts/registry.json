@@ -1,0 +1,56 @@
+{
+  "version": "vesselrisk-1.0",
+  "created_utc": "2026-10-02T05:34:25.328409+00:00",
+  "dataset_sha256": "e26cdb237cedfd74109a06cf36c1eeb24f922480967dee1b103540e5319b42a8",
+  "seed": 2026,
+  "models": {
+    "CAD": {
+      "file": "CAD.joblib",
+      "sha256": "2189859ea60e08e87ef82307e68e6a524a3ed4a478ad88130d1fa93897af84f8",
+      "family": "Logistic regression",
+      "params": {
+        "C": 1.0
+      },
+      "calibration": "sigmoid",
+      "training_n": 303
+    },
+    "LAD": {
+      "file": "LAD.joblib",
+      "sha256": "1cdec7d46751a937919fa186451d4499a4e8601cc26943817df40d19946f7931",
+      "family": "XGBoost",
+      "params": {
+        "max_depth": 2
+      },
+      "calibration": "sigmoid",
+      "training_n": 303
+    },
+    "LCX": {
+      "file": "LCX.joblib",
+      "sha256": "37af871247cc5059402163ad66ba256b53114910519b7c0b649fd8c841c59ca7",
+      "family": "Random forest",
+      "params": {
+        "min_samples_leaf": 8
+      },
+      "calibration": "sigmoid",
+      "training_n": 303
+    },
+    "RCA": {
+      "file": "RCA.joblib",
+      "sha256": "f9c02107e2dd136e06a47344bae72892e8c88a95c9c0bc335d9d8110546ad8fc",
+      "family": "Logistic regression",
+      "params": {
+        "C": 0.1
+      },
+      "calibration": "sigmoid",
+      "training_n": 303
+    }
+  },
+  "libraries": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.7.1",
+    "xgboost": "3.4.1",
+    "shap": "0.52.0",
+    "joblib": "1.5.1"
+  }
+}

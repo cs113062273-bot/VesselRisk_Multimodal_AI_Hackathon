@@ -1,0 +1,1 @@
+"""VesselRisk model service."""

@@ -1,0 +1,47 @@
+{
+  "captured_utc": "2026-10-02T11:43:05.107Z",
+  "source": "Real local production frontend + FastAPI + shipped model artifacts; software WebGL",
+  "captures": [
+    {
+      "file": "01-dashboard.png",
+      "description": "Real held-out mixed-vessel case; all four predictions and LAD explanation."
+    },
+    {
+      "file": "02-lad-shap.png",
+      "description": "LAD selected; calibrated probability, model family and local SHAP in percentage points."
+    },
+    {
+      "file": "03-lcx-selected-xray.png",
+      "description": "LCX mesh selected; corresponding LCX explanation; X-ray reveals coronary anatomy."
+    },
+    {
+      "file": "04-rca-selected-vessels.png",
+      "description": "RCA mesh selected with vessel isolation; right panel shows RCA explanation."
+    },
+    {
+      "file": "05-expanded-heart.png",
+      "description": "Expanded real 3D coronary anatomy; 63 source structures, individually mapped territories."
+    },
+    {
+      "file": "06-cad-metrics.png",
+      "description": "CAD metrics, ROC, precision-recall, calibration, model comparison and confusion matrix."
+    },
+    {
+      "file": "07-vessel-thresholds.png",
+      "description": "LCX fixed versus training-only research operating points, false-positive tradeoff and rejected expanded policy."
+    },
+    {
+      "file": "08-global-shap.png",
+      "description": "Held-out global SHAP and explanation ranking stability."
+    },
+    {
+      "file": "09-robustness-failures.png",
+      "description": "Subgroups, ablations and largest held-out errors; uncertainty limits are explicit."
+    },
+    {
+      "file": "10-data-leakage-models.png",
+      "description": "Class distributions, actual leakage guard, deployed families/hashes and anatomy attribution."
+    }
+  ],
+  "browser_errors": []
+}

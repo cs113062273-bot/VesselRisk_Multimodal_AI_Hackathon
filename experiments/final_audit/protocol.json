@@ -1,0 +1,32 @@
+{
+  "declared_date": "2026-10-02",
+  "purpose": "One final opportunity assessment, not a deployment selection or independent confirmation",
+  "targets": ["LCX", "RCA"],
+  "outer": "Reuse the exact frozen target-specific 5-fold x 2-repeat partitions, seed 2026",
+  "inner": "3-fold stratified, seed 2026 + outer fold; maximize raw inner OOF ROC-AUC - 0.25 * Brier, identical to baseline",
+  "candidates": [
+    {"family": "Elastic net", "C": 0.03, "l1_ratio": 0.25, "class_weight": null},
+    {"family": "Elastic net", "C": 0.1, "l1_ratio": 0.25, "class_weight": null},
+    {"family": "Elastic net", "C": 0.3, "l1_ratio": 0.5, "class_weight": null},
+    {"family": "Elastic net", "C": 0.1, "l1_ratio": 0.25, "class_weight": "balanced"},
+    {"family": "HistGradientBoosting", "max_leaf_nodes": 3, "l2_regularization": 10},
+    {"family": "HistGradientBoosting", "max_leaf_nodes": 7, "l2_regularization": 10},
+    {"family": "CatBoost", "depth": 2, "l2_leaf_reg": 10},
+    {"family": "CatBoost", "depth": 3, "l2_leaf_reg": 10}
+  ],
+  "fixed": {
+    "elastic_net": "saga, max_iter=10000, tol=0.0001; original fold-local imputation/scaling/one-hot",
+    "hist_gradient_boosting": "100 iterations, learning_rate=0.04, min_samples_leaf=20, early_stopping=False; original fold-local preprocessing; no class weighting",
+    "catboost": "1.2.8; 150 iterations, learning_rate=0.04, boosting_type=Ordered, loss_function=Logloss, thread_count=2, random_seed=2026, allow_writing_files=False; native categorical inputs, no class weighting or eval_set",
+    "calibration": "Fixed sigmoid, 3-fold training-only calibration, ensemble=False; no method search",
+    "features": "All 55 eligible original inputs; no target-derived features, label repair, selection or engineered clinical cutoffs",
+    "threshold": 0.5
+  },
+  "primary_policy": "Original six candidates plus these eight; family and parameters chosen exclusively by inner scores",
+  "secondary": "All three new families, each inner-tuned; descriptive only, never select a family by its outer results",
+  "aggregation": "Repeat-averaged OOF probabilities, one row per patient; also report each repeat and all ten paired fold differences",
+  "uncertainty": "2000 paired patient-stratified bootstrap resamples of fixed OOF predictions; conditional, overlapping training data, omits retraining and development selection uncertainty; no independent-fold significance tests",
+  "opportunity_flag": "Descriptive only: AUC delta >= 0.02 with Brier delta <= 0.005 and AUC improves in >=7/10 folds; OR Brier delta <= -0.01 with AUC delta >= -0.005 and Brier improves in >=7/10 folds. Report paired intervals regardless.",
+  "deployment": "Preserve every production artifact regardless of results. No automatic promotion, no selection of model family/features/calibration/thresholds using outer labels.",
+  "stop": "Run this declared batch once. No adaptive grid expansion, new seeds, second search, or outcome-selected ensembles. Archive negative trial evidence for transparency; do not integrate rejected models into the app."
+}

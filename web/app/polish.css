@@ -1,0 +1,234 @@
+/* Recording-ready refinement. Layout, probability bands and evidence stay intact. */
+:root { --reading: #506b7b; --quiet-reading: #617986; --impact-up: #b34d49; --impact-down: #237b76; }
+.breadcrumb, .eyebrow { color: var(--quiet-reading); }
+.workspace-heading p, .model-ready { color: var(--reading); font-size: 12px; }
+.workspace-proof { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 14px; margin-bottom: 7px; color: var(--reading); font-size: 10px; font-weight: 600; }
+.workspace-proof > :not(:first-child) { border-left: 1px solid #cbd7df; padding-left: 14px; }
+.workspace-proof button { display: inline-flex; align-items: center; gap: 4px; padding: 0; color: #137b79; font-weight: 700; }
+.workspace-proof button:hover { text-decoration: underline; text-underline-offset: 3px; }
+.explanation-empty { align-items: stretch; justify-content: center; gap: 12px; padding: 28px 22px; text-align: left; }
+.explanation-empty > h3 { color: var(--navy); font-size: 18px; letter-spacing: -.4px; }
+.first-look-steps { display: grid; gap: 22px; list-style: none; margin: 10px 0; padding: 0; }
+.first-look-steps li { display: grid; grid-template-columns: 25px 1fr; gap: 12px; }
+.first-look-steps li > span { color: #137b79; font-family: var(--mono); font-size: 12px; padding-top: 2px; }
+.first-look-steps strong { color: var(--ink); font-size: 12px; }
+.first-look-steps p { color: var(--reading); font-size: 11px; line-height: 1.75; margin-top: 5px; }
+.explanation-empty .first-look-scope { padding-top: 15px; border-top: 1px solid var(--line); color: var(--quiet-reading); font-size: 10px; line-height: 1.75; }
+.panel-title h2 { font-size: 15px; }
+.quiet-tag { color: var(--reading); }
+.case-picker > label, .case-picker p, .input-tabs button { color: var(--reading); font-size: 11px; }
+.select-wrap select, .search-input input { font-size: 12px; }
+.search-input input::placeholder { color: var(--quiet-reading); }
+.clinical-field > span:first-child { color: var(--ink); font-size: 12px; }
+.clinical-field > span:first-child small, .observed-range { color: var(--quiet-reading); font-size: 10px; }
+.clinical-field input, .clinical-field select { font-size: 12px; height: 36px; margin-top: auto; background: #edf1f4; border-color: #cbd7df; }
+.patient-panel .fields-scroll { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.observed-range { min-height: 15px; }
+.input-footer > p, .input-actions button, .import-button { color: var(--reading); font-size: 10px; }
+.input-footer .primary-button { font-size: 12px; }
+.leakage-seal strong, .leakage-seal p { font-size: 10px; color: #466e65; }
+.risk-overview { min-height: 96px; }
+.risk-overview button { padding: 2px 14px; gap: 4px; }
+.risk-overview button > span { color: var(--reading); font-size: 11px; }
+.risk-overview button > small { color: var(--quiet-reading); font-size: 9px; }
+.risk-overview button > strong { filter: brightness(.66); }
+.risk-overview button.focused { background: #edf3f6; box-shadow: inset 0 -2px var(--navy); }
+.heart-viewer { padding: 18px 20px 12px; background-image: radial-gradient(ellipse at 48% 47%, #254759 0%, #173447 43%, #102939 85%); }
+.eyebrow.light { color: #a7c1ce; font-size: 9px; }
+.viewer-heading h2 { font-size: 24px; margin-top: 3px; }
+.viewer-topline { margin-top: 10px; font-size: 10px; color: #b1c8d3; }
+.anatomy-canvas { background-image: linear-gradient(#88afc503 1px, transparent 1px), linear-gradient(90deg, #88afc503 1px, transparent 1px); }
+.viewer-hint { position: relative; left: auto; bottom: auto; transform: none; justify-content: center; padding-top: 5px; font-size: 10px; color: #bbcfda; }
+.orientation { color: #a1bac8; top: 40px; }
+.orientation i { color: #a1bac8; font-size: 7px; border-color: #648798; }
+.projected-label { padding: 7px 10px; font-size: 11px; color: #e1edf3; background: #143447f2; border-color: #73919f; box-shadow: 0 3px 10px #061c2c30; }
+.artery-label i { width: 6px; height: 6px; }
+.artery-label.selected { color: white; background: #244c60; border-color: #e2f0f5; box-shadow: 0 0 0 1px #e2f0f530; }
+.artery-label.selected::after { content: '✓'; font-size: 10px; }
+.viewer-controls { padding: 10px 0; }
+.viewer-controls button { color: #c4d7e1; font-size: 11px; padding: 7px 10px; border-color: #5a7b8c; transition: background .15s, border-color .15s; }
+.viewer-controls button:hover, .viewer-controls button[aria-pressed=true] { color: white; background: #325968; border-color: #b4d2dc; }
+.vessel-selector button { padding: 9px 10px; border-color: #486778; color: #d4e4ec; }
+.vessel-selector button.active { border-color: #d9e9f0; background: #294b5c; box-shadow: inset 0 0 0 1px #d9e9f033; }
+.vessel-selector strong { font-size: 12px; }
+.vessel-selector small { color: #b6cdd8; font-size: 9px; }
+.vessel-selector b { font-size: 14px; }
+.vessel-selector i { width: 6px; height: 6px; }
+.color-key { color: #b6ccd8; font-size: 10px; margin: 10px 0 6px; gap: 10px; }
+.anatomy-note, .anatomy-credit { color: #aec6d3; font-size: 9px; }
+.anatomy-credit { font-size: 8px; }
+.on-dark { color: #c4d7e1; border-color: #5a7b8c; }
+.heart-viewer button:focus-visible { outline-color: white; }
+.prediction-status { color: var(--reading); font-size: 10px; }
+.results-stale .prediction-status { color: #77551c; background: #fff4da; border-radius: 4px; padding: 5px 8px; }
+.target-tabs button { font-size: 11px; color: var(--reading); }
+.target-tabs button[aria-selected=true] { color: var(--navy); box-shadow: inset 0 -2px var(--navy), 0 1px 4px #16384c0a; }
+.explanation-content { padding: 13px 18px 18px; }
+.explanation-content > .eyebrow { font-size: 10px; color: var(--reading); }
+.target-name { font-size: 15px; color: var(--navy); }
+.detail-probability { margin-top: 8px; }
+.detail-probability > span, .detail-probability > span b { color: var(--reading); font-size: 10px; }
+.explanation-content > .fine-print { font-size: 10px; line-height: 1.65; color: var(--quiet-reading); }
+.range-display { margin: 12px 0 16px; padding: 10px; }
+.range-display > div:first-child, .range-display b { color: var(--reading); font-size: 10px; }
+.range-display p { color: var(--quiet-reading); font-size: 10px; line-height: 1.5; }
+.explain-section-title { flex-wrap: wrap; gap: 6px; margin: 16px 0 10px; }
+.explain-section-title h3 { font-size: 12px; }
+.explain-section-title > span, .direction-key { font-size: 10px; }
+.direction-key span:first-child, .increase { color: var(--impact-up); }
+.direction-key span:last-child, .decrease { color: var(--impact-down); }
+.contribution-heading { color: var(--quiet-reading); font-size: 8px; letter-spacing: .4px; }
+.contribution-row { grid-template-columns: minmax(0, 1.35fr) minmax(50px, .7fr) 53px; gap: 8px; padding: 8px 0; }
+.contribution-row strong { color: var(--ink); font-size: 11px; white-space: normal; line-height: 1.45; }
+.contribution-row > div:first-child > span { color: var(--quiet-reading); font-size: 10px; }
+.contribution-row > b { font-size: 11px; font-weight: 500; }
+.contribution-row b small { color: var(--reading); font-size: 8px; }
+.diverging-bar { background: linear-gradient(90deg, #f3f6f7 calc(50% - .5px), #8fa6b3 calc(50% - .5px), #8fa6b3 calc(50% + .5px), #f3f6f7 calc(50% + .5px)); }
+.diverging-bar > span { transition: none; }
+.positive-bar { background: #c46760; }
+.negative-bar { background: #3f938c; }
+.text-button { font-size: 11px; color: #137b79; }
+.shap-total, .shap-total b { font-size: 10px; color: var(--reading); }
+.agreement-list > div { grid-template-columns: 115px 1fr 45px; font-size: 11px; color: var(--reading); }
+.agreement-list b { font-size: 10px; color: var(--navy); }
+.representation strong { font-size: 11px; color: #406e63; }
+.representation p { font-size: 10px; color: #537a70; }
+.representation.flagged strong, .representation.flagged p { color: #77551c; }
+.evidence-link { font-size: 12px; }
+.evidence-link span > span { color: var(--reading); font-size: 10px; }
+.case-review p, .case-review .text-button, .recorded-outcomes > span { font-size: 11px; color: var(--reading); }
+.recorded-outcomes b { font-size: 12px; }
+.recorded-outcomes small { font-size: 10px; color: var(--reading); }
+.safety-footer p, .safety-footer button { color: var(--reading); font-size: 11px; }
+
+/* Dense evidence remains in its existing sections, with a legible reading scale. */
+.evidence-lab { max-width: 1600px; }
+.lab-intro { margin-bottom: 16px; }
+.lab-intro > div { min-width: 0; }
+.lab-intro > .secondary-button { flex-shrink: 0; }
+.lab-intro .evaluation-method { font-size: 11px; line-height: 1.75; margin-top: 8px; max-width: 1020px; }
+.evaluation-method strong { color: var(--navy); margin-right: 7px; }
+.lab-intro p, .lab-target-heading > span { color: var(--reading); font-size: 12px; }
+.cohort-band { padding: 18px 24px; margin-bottom: 22px; }
+.cohort-band span, .audit-pass small { color: var(--reading); font-size: 11px; }
+.audit-pass strong { color: #267970; }
+.lab-navigation { margin-bottom: 22px; }
+.lab-tabs button { font-size: 12px; color: var(--reading); }
+.lab-target-heading { margin-bottom: 20px; }
+.auc-feature > span, .metric-row span { color: var(--reading); font-size: 12px; }
+.auc-feature p, .auc-feature p b, .metric-row small { color: var(--quiet-reading); font-size: 10px; }
+.auc-feature { min-width: 200px; padding-right: 24px; }
+.metric-row { gap: 18px; }
+.metric-row > div { gap: 10px; }
+.metric-row b { font-size: 25px; }
+.lab-note { margin: 16px 0 22px; color: #477b71; }
+.lab-note p { color: #446d65; font-size: 11px; line-height: 1.75; }
+.curve-section h3 { color: var(--navy); font-size: 15px; }
+.curve-section p { color: var(--reading); font-size: 11px; }
+.curve-chart { height: 255px; }
+.curve-chart .recharts-cartesian-axis-tick-value { font-size: 11px; fill: var(--reading); }
+.curve-chart .recharts-label { font-size: 12px; fill: var(--reading); }
+.lab-two-columns { gap: 40px; }
+.lab-two-columns h3, .failure-section h3, .registry-section h3, .anatomy-provenance h3 { color: var(--navy); font-size: 17px; }
+.lab-two-columns > section > p, .evidence-lab .muted, .anatomy-provenance p { color: var(--reading); font-size: 12px; line-height: 1.8; }
+.evidence-lab .fine-print { color: var(--quiet-reading); font-size: 11px; line-height: 1.75; }
+.evidence-lab th { color: var(--reading); font-size: 11px; background: #eaf1f4; font-weight: 700; padding: 11px 12px; }
+.evidence-lab td { color: #365767; font-size: 12px; padding: 13px 12px; font-variant-numeric: tabular-nums; }
+.evidence-lab td:first-child { font-size: 12px; color: var(--ink); }
+.evidence-lab tbody tr:nth-child(even):not(.selected-row) { background: #edf3f580; }
+.evidence-lab tr.selected-row { background: #e3f0ee; }
+.confusion { grid-template-columns: 115px 1fr 1fr; }
+.confusion > span, .confusion small { color: var(--reading); font-size: 11px; }
+.confusion > b { background: #f2e8e4; color: #8b5041; font-size: 30px; padding: 18px 12px; }
+.confusion > b.correct { background: #d9ece8; color: #286d64; }
+.protocol-list { grid-template-columns: 150px 1fr; font-size: 12px; }
+.protocol-list dt { font-size: 11px; color: var(--quiet-reading); }
+.protocol-list dd { color: var(--ink); }
+.research-thresholds td:nth-child(2) { max-width: 250px; }
+.research-thresholds td:last-child { font-weight: 500; color: var(--navy); white-space: nowrap; }
+.global-bars > div { grid-template-columns: 180px 1fr 62px; font-size: 12px; color: var(--ink); gap: 16px; }
+.global-bars > div > div, .global-bars i { height: 10px; }
+.global-bars i { background: #358b86; }
+.global-bars b { font-size: 12px; color: var(--reading); }
+.global-bars b small { font-size: 9px; }
+.stability-number { color: #267970; }
+.stability-number small, .limitation-list { color: var(--reading); font-size: 12px; }
+.evidence-details { font-size: 12px; }
+.evidence-details summary { color: #28766f; }
+.registry-section code { font-size: 10px; overflow-wrap: anywhere; }
+.source-link { font-size: 12px; }
+.audit-result { color: #2e7a6d; }
+.audit-result span { font-size: 11px; color: #426e62; }
+.excluded-labels span { color: #a3443d; font-size: 11px; }
+.distribution > div, .distribution span { color: var(--reading); font-size: 11px; }
+.leakage-experiment { font-size: 12px; color: var(--reading); grid-template-columns: 1fr 110px 90px; }
+.leakage-experiment b { color: var(--navy); }
+.leakage-experiment span:nth-child(3n) { font-size: 10px; }
+.page-enter, .explanation-content { animation-duration: .2s; }
+
+@media (min-width: 1251px) {
+  .workspace { max-width: 1840px; padding: 20px 30px 20px; }
+  .workspace-heading { margin-bottom: 19px; }
+  .workspace-grid { grid-template-columns: 280px minmax(0, 1fr) 356px; gap: 18px; }
+  .panel-title { padding: 16px 18px; }
+  .case-picker { padding-top: 14px; }
+  .case-picker p { min-height: 20px; }
+  .viewer-heading { position: absolute; top: 18px; left: 20px; right: 20px; pointer-events: none; }
+  .viewer-heading button { pointer-events: auto; }
+  .viewer-topline { margin-top: 63px; }
+  .viewer-full .viewer-heading { top: 28px; left: 36px; right: 36px; }
+}
+@media (min-width: 1400px) {
+  .heart-viewer:not(.viewer-full) .viewer-topline { position: absolute; top: 78px; left: 20px; right: 20px; margin-top: 0; pointer-events: none; }
+  .heart-viewer:not(.viewer-full) .anatomy-canvas { margin-top: 28px; }
+  .heart-viewer:not(.viewer-full) .orientation { top: 62px; }
+}
+@media (min-width: 1600px) {
+  .workspace-grid { grid-template-columns: 304px minmax(0, 1fr) 384px; gap: 22px; }
+  .contribution-row strong { font-size: 12px; }
+  .risk-overview button > strong { font-size: 30px; }
+  .risk-overview .overall-risk > strong { font-size: 35px; }
+}
+@media (min-width: 1400px) and (max-width: 1599px) {
+  .viewer-heading h2 { font-size: 23px; }
+}
+@media (max-width: 1250px) {
+  .metric-row small { white-space: normal; }
+  .global-bars > div { grid-template-columns: 145px 1fr 55px; gap: 10px; }
+  .vessel-selector small { font-size: 8px; }
+}
+@media (max-width: 760px) {
+  .workspace-heading p { font-size: 11px; }
+  .risk-overview button { padding: 2px 8px; }
+  .risk-overview button > span { font-size: 9px; }
+  .risk-overview button > small { font-size: 8px; }
+  .heart-viewer { padding: 16px 12px 12px; }
+  .viewer-heading h2 { font-size: 23px; }
+  .viewer-topline { font-size: 9px; }
+  .viewer-hint { font-size: 9px; }
+  .viewer-controls { gap: 5px; }
+  .viewer-controls button { padding: 7px; font-size: 10px; }
+  .vessel-selector button { gap: 5px; padding: 8px; }
+  .vessel-selector strong { font-size: 11px; }
+  .vessel-selector b { font-size: 12px; }
+  .color-key { font-size: 9px; gap: 8px; }
+  .anatomy-note { font-size: 8px; }
+  .lab-tabs { gap: 10px; }
+  .lab-tabs button { font-size: 10px; }
+  .lab-navigation > .target-tabs { max-width: none; }
+  .auc-feature { min-width: 0; padding-right: 0; }
+  .metric-row { gap: 22px 10px; }
+  .metric-row span { font-size: 10px; }
+  .metric-row b { font-size: 21px; }
+  .metric-row small { font-size: 9px; }
+  .protocol-list { grid-template-columns: 110px 1fr; gap: 10px; font-size: 11px; }
+  .lab-two-columns { gap: 28px; }
+  .evidence-lab th { padding: 10px 8px; font-size: 10px; }
+  .evidence-lab td, .evidence-lab td:first-child { padding: 12px 8px; font-size: 11px; }
+  .confusion { grid-template-columns: 80px 1fr 1fr; }
+  .confusion > span, .confusion small { font-size: 10px; }
+  .global-bars > div { grid-template-columns: 135px 1fr 52px; font-size: 11px; gap: 9px; }
+  .global-bars b { font-size: 11px; }
+  .leakage-experiment { grid-template-columns: 1fr 85px 75px; font-size: 10px; }
+  .leakage-experiment span:nth-child(3n) { font-size: 9px; }
+}

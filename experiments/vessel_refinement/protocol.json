@@ -1,0 +1,15 @@
+{
+  "targets": [
+    "LCX",
+    "RCA"
+  ],
+  "outer": "Exactly the frozen v1 5-fold x 2-repeat split indices",
+  "new_candidates": "ExtraTrees: 160 trees, leaf 2/5, max_features .8, balanced; SVM RBF: C .3/3, gamma scale, balanced, training-only internal probability calibration",
+  "selection": "Existing inner ROC-AUC - .25*Brier; add four configurations to the six frozen candidates. Select each family parameters, then family using training-only inner scores.",
+  "threshold": "3-fold calibrated inner OOF within outer train; maximize F1 over fixed grid .15:.01:.75. Ties: higher precision, then higher threshold.",
+  "pooled": "One decision per patient: mean(probability - training-selected threshold) across its two held-out folds >= 0; equivalent to mean probability >= mean threshold.",
+  "promotion_rule": "Expanded search only if paired AUC >= frozen baseline + .01 and Brier <= baseline + .005. No picking a family on outer scores.",
+  "threshold_retention_rule": "Retain research operating point only if F1 >= baseline + .03, recall >= baseline + .10, precision >= max(.45, baseline precision - .15).",
+  "development_limit": "Single bounded post-baseline development experiment on reused outer splits; comparisons are descriptive development evidence, not an untouched confirmation or external validation.",
+  "seed": 2026
+}

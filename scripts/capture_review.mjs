@@ -1,0 +1,64 @@
+// Capture the real running product for the judge/reviewer package.
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import path from 'node:path';
+const root = path.resolve(import.meta.dirname, '..');
+const require = createRequire(path.join(root, 'web/package.json'));
+const { chromium, expect } = require('@playwright/test');
+const output = path.join(root, 'review/screenshots');
+fs.mkdirSync(output, { recursive: true });
+const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+const errors = [];
+page.on('pageerror', error => errors.push(error.message));
+const captures = [];
+async function shot(name, description, locator = null) {
+  const options = { path: path.join(output, `${name}.png`), animations: 'disabled' };
+  if (locator) await locator.screenshot(options);
+  else await page.screenshot({ ...options, fullPage: true });
+  captures.push({ file: `${name}.png`, description });
+}
+try {
+  await page.goto(process.env.DEMO_URL || 'http://127.0.0.1:3000');
+  await page.getByRole('button', { name: 'Predict coronary risk', exact: true }).click();
+  await expect(page.getByText(/held-out demonstration ·/)).toBeVisible({ timeout: 90000 });
+  await expect(page.getByRole('button', { name: 'Select LAD in 3D' })).toBeVisible();
+  await expect(page.getByText(/FPS · live/)).toBeVisible({ timeout: 10000 });
+  await shot('01-dashboard', 'Real held-out mixed-vessel case; all four predictions and LAD explanation.');
+  await shot('02-lad-shap', 'LAD selected; calibrated probability, model family and local SHAP in percentage points.', page.locator('.explanation-panel'));
+  await page.getByRole('button', { name: 'Select LCX in 3D' }).click();
+  await expect(page.getByRole('heading', { name: 'Left circumflex', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'X-ray', exact: true }).click();
+  await shot('03-lcx-selected-xray', 'LCX mesh selected; corresponding LCX explanation; X-ray reveals coronary anatomy.');
+  await page.getByRole('button', { name: 'Select RCA in 3D' }).click();
+  await expect(page.getByRole('heading', { name: 'Right coronary artery', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Vessels only', exact: true }).click();
+  await shot('04-rca-selected-vessels', 'RCA mesh selected with vessel isolation; right panel shows RCA explanation.');
+  await page.getByRole('button', { name: 'Vessels only', exact: true }).click();
+  await page.getByRole('button', { name: 'X-ray', exact: true }).click();
+  await page.getByRole('button', { name: 'Expand anatomy', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Exit expanded anatomy' })).toBeVisible();
+  await shot('05-expanded-heart', 'Expanded real 3D coronary anatomy; 63 source structures, individually mapped territories.');
+  await page.getByRole('button', { name: 'Exit expanded anatomy' }).click();
+  await page.getByRole('button', { name: 'Evidence Lab', exact: true }).click();
+  await page.getByRole('tab', { name: 'CAD', exact: true }).click();
+  await expect(page.locator('.auc-feature')).toContainText('0.925');
+  await shot('06-cad-metrics', 'CAD metrics, ROC, precision-recall, calibration, model comparison and confusion matrix.');
+  await page.getByRole('tab', { name: 'LCX', exact: true }).click();
+  await expect(page.locator('.auc-feature')).toContainText('0.728');
+  await expect(page.locator('.research-thresholds')).toContainText('0.840');
+  await shot('07-vessel-thresholds', 'LCX fixed versus training-only research operating points, false-positive tradeoff and rejected expanded policy.');
+  await page.getByRole('tab', { name: 'LAD', exact: true }).click();
+  await page.getByRole('tab', { name: 'Interpretability', exact: true }).click();
+  await shot('08-global-shap', 'Held-out global SHAP and explanation ranking stability.');
+  await page.getByRole('tab', { name: 'Robustness', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Where the model failed' })).toBeVisible();
+  await shot('09-robustness-failures', 'Subgroups, ablations and largest held-out errors; uncertainty limits are explicit.');
+  await page.getByRole('tab', { name: 'Data & provenance', exact: true }).click();
+  await shot('10-data-leakage-models', 'Class distributions, actual leakage guard, deployed families/hashes and anatomy attribution.');
+  if (errors.length) throw new Error(JSON.stringify(errors));
+  fs.writeFileSync(path.join(output, 'index.json'), JSON.stringify({ captured_utc: new Date().toISOString(), source: 'Real local production frontend + FastAPI + shipped model artifacts; software WebGL', captures, browser_errors: errors }, null, 2));
+  console.log(`Captured ${captures.length} real application screenshots; no browser errors.`);
+} finally {
+  await browser.close();
+}

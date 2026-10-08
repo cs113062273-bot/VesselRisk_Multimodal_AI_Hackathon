@@ -1,0 +1,586 @@
+{
+  "source": "Unmodified shipped evidence.json and registry.json",
+  "protocol": {
+    "outer": "5 folds × 2 repeats, stratified",
+    "inner": "3-fold stratified search, 6 predeclared candidates",
+    "calibration": "Sigmoid, 3-fold out-of-fold calibration inside each outer training partition; ensemble=False",
+    "selection": "Inner ROC-AUC - 0.25 × Brier; select parameters per family, then family. No outer labels used.",
+    "threshold": 0.5,
+    "seed": 2026,
+    "ci": "95% patient-stratified bootstrap (1,000 resamples) of repeat-averaged OOF probabilities; conditional on fitted folds, not external validation",
+    "pooled": "Each patient occurs once after averaging their held-out predictions across repeats. Fold SD is descriptive; folds overlap.",
+    "isotonic": "Sensitivity comparison only; not selected on outer test data. Sigmoid predeclared for the small cohort.",
+    "shap": "Permutation SHAP of exact calibrated probability, 16 training-background patients, 6 held-out patients per outer fold; approximate correlated-feature attributions.",
+    "limitations": [
+      "Single 303-patient referral cohort; no external validation",
+      "Independent targets may be inconsistent; CAD is not forced to vessel union",
+      "Bootstrap intervals omit retraining and selection uncertainty",
+      "No validated clinical decision thresholds",
+      "Vessel predictions may be substantially weaker than overall CAD"
+    ]
+  },
+  "targets": {
+    "CAD": {
+      "n": 303,
+      "positive": 216,
+      "negative": 87,
+      "metrics": {
+        "accuracy": 0.8679867986798679,
+        "precision": 0.8963963963963963,
+        "recall": 0.9212962962962963,
+        "f1": 0.908675799086758,
+        "roc_auc": 0.9250212856534695,
+        "pr_auc": 0.9667147944629353,
+        "brier": 0.09426989088155195,
+        "confusion_matrix": [
+          [
+            64,
+            23
+          ],
+          [
+            17,
+            199
+          ]
+        ]
+      },
+      "auc_ci": [
+        0.8912156768837802,
+        0.9536544806300553
+      ],
+      "dispersion": {
+        "accuracy": {
+          "mean": 0.8681420765027322,
+          "sd": 0.035002833082876654
+        },
+        "precision": {
+          "mean": 0.9012927539310125,
+          "sd": 0.03248190925155175
+        },
+        "recall": {
+          "mean": 0.9169133192389006,
+          "sd": 0.042994373310208424
+        },
+        "f1": {
+          "mean": 0.9082090227481308,
+          "sd": 0.02526780063369601
+        },
+        "roc_auc": {
+          "mean": 0.9296933079080822,
+          "sd": 0.033019443574337885
+        },
+        "pr_auc": {
+          "mean": 0.9707513605364426,
+          "sd": 0.015346093530092326
+        },
+        "brier": {
+          "mean": 0.0967882478019456,
+          "sd": 0.02099755894539029
+        }
+      },
+      "selection_counts": {
+        "Logistic regression": 9,
+        "XGBoost": 1
+      },
+      "calibration_comparison": [
+        {
+          "method": "Raw",
+          "metrics": {
+            "accuracy": 0.8778877887788779,
+            "precision": 0.9365853658536586,
+            "recall": 0.8888888888888888,
+            "f1": 0.9121140142517815,
+            "roc_auc": 0.9260855683269477,
+            "pr_auc": 0.9681231833783128,
+            "brier": 0.10462555857084989,
+            "confusion_matrix": [
+              [
+                74,
+                13
+              ],
+              [
+                24,
+                192
+              ]
+            ]
+          }
+        },
+        {
+          "method": "Sigmoid",
+          "metrics": {
+            "accuracy": 0.8679867986798679,
+            "precision": 0.8963963963963963,
+            "recall": 0.9212962962962963,
+            "f1": 0.908675799086758,
+            "roc_auc": 0.9250212856534695,
+            "pr_auc": 0.9667147944629353,
+            "brier": 0.09426989088155195,
+            "confusion_matrix": [
+              [
+                64,
+                23
+              ],
+              [
+                17,
+                199
+              ]
+            ]
+          }
+        },
+        {
+          "method": "Isotonic",
+          "metrics": {
+            "accuracy": 0.8613861386138614,
+            "precision": 0.9027777777777778,
+            "recall": 0.9027777777777778,
+            "f1": 0.9027777777777778,
+            "roc_auc": 0.9148573861217538,
+            "pr_auc": 0.9573776085402868,
+            "brier": 0.09856572662565997,
+            "confusion_matrix": [
+              [
+                66,
+                21
+              ],
+              [
+                21,
+                195
+              ]
+            ]
+          }
+        }
+      ],
+      "deployed_model": {
+        "file": "CAD.joblib",
+        "sha256": "2189859ea60e08e87ef82307e68e6a524a3ed4a478ad88130d1fa93897af84f8",
+        "family": "Logistic regression",
+        "params": {
+          "C": 1.0
+        },
+        "calibration": "sigmoid",
+        "training_n": 303
+      }
+    },
+    "LAD": {
+      "n": 303,
+      "positive": 177,
+      "negative": 126,
+      "metrics": {
+        "accuracy": 0.7887788778877888,
+        "precision": 0.7927461139896373,
+        "recall": 0.864406779661017,
+        "f1": 0.827027027027027,
+        "roc_auc": 0.8387588557080083,
+        "pr_auc": 0.8677524369438232,
+        "brier": 0.15732784221800158,
+        "confusion_matrix": [
+          [
+            86,
+            40
+          ],
+          [
+            24,
+            153
+          ]
+        ]
+      },
+      "auc_ci": [
+        0.791000807102502,
+        0.8855741637521298
+      ],
+      "dispersion": {
+        "accuracy": {
+          "mean": 0.765792349726776,
+          "sd": 0.049152964120574474
+        },
+        "precision": {
+          "mean": 0.7873914099627969,
+          "sd": 0.03827347894484386
+        },
+        "recall": {
+          "mean": 0.821984126984127,
+          "sd": 0.07943740091087613
+        },
+        "f1": {
+          "mean": 0.8025839443857355,
+          "sd": 0.04755842060560047
+        },
+        "roc_auc": {
+          "mean": 0.8271880341880342,
+          "sd": 0.029903291075828262
+        },
+        "pr_auc": {
+          "mean": 0.8633740889001688,
+          "sd": 0.032498131702387564
+        },
+        "brier": {
+          "mean": 0.16222820763586074,
+          "sd": 0.01583627812223672
+        }
+      },
+      "selection_counts": {
+        "XGBoost": 5,
+        "Random forest": 3,
+        "Logistic regression": 2
+      },
+      "calibration_comparison": [
+        {
+          "method": "Raw",
+          "metrics": {
+            "accuracy": 0.7854785478547854,
+            "precision": 0.7947368421052632,
+            "recall": 0.8531073446327684,
+            "f1": 0.8228882833787466,
+            "roc_auc": 0.8410456461303919,
+            "pr_auc": 0.8731029277670843,
+            "brier": 0.15881528418604735,
+            "confusion_matrix": [
+              [
+                87,
+                39
+              ],
+              [
+                26,
+                151
+              ]
+            ]
+          }
+        },
+        {
+          "method": "Sigmoid",
+          "metrics": {
+            "accuracy": 0.7887788778877888,
+            "precision": 0.7927461139896373,
+            "recall": 0.864406779661017,
+            "f1": 0.827027027027027,
+            "roc_auc": 0.8387588557080083,
+            "pr_auc": 0.8677524369438232,
+            "brier": 0.15732784221800158,
+            "confusion_matrix": [
+              [
+                86,
+                40
+              ],
+              [
+                24,
+                153
+              ]
+            ]
+          }
+        },
+        {
+          "method": "Isotonic",
+          "metrics": {
+            "accuracy": 0.7722772277227723,
+            "precision": 0.7842105263157895,
+            "recall": 0.8418079096045198,
+            "f1": 0.8119891008174387,
+            "roc_auc": 0.8344094700026903,
+            "pr_auc": 0.8611790506122109,
+            "brier": 0.16019805283876537,
+            "confusion_matrix": [
+              [
+                85,
+                41
+              ],
+              [
+                28,
+                149
+              ]
+            ]
+          }
+        }
+      ],
+      "deployed_model": {
+        "file": "LAD.joblib",
+        "sha256": "1cdec7d46751a937919fa186451d4499a4e8601cc26943817df40d19946f7931",
+        "family": "XGBoost",
+        "params": {
+          "max_depth": 2
+        },
+        "calibration": "sigmoid",
+        "training_n": 303
+      }
+    },
+    "LCX": {
+      "n": 303,
+      "positive": 119,
+      "negative": 184,
+      "metrics": {
+        "accuracy": 0.6732673267326733,
+        "precision": 0.625,
+        "recall": 0.42016806722689076,
+        "f1": 0.5025125628140703,
+        "roc_auc": 0.7278498355864084,
+        "pr_auc": 0.5746414669956219,
+        "brier": 0.2064232934613873,
+        "confusion_matrix": [
+          [
+            154,
+            30
+          ],
+          [
+            69,
+            50
+          ]
+        ]
+      },
+      "auc_ci": [
+        0.6696645506028497,
+        0.7864495798319329
+      ],
+      "dispersion": {
+        "accuracy": {
+          "mean": 0.6517759562841531,
+          "sd": 0.03198297215594535
+        },
+        "precision": {
+          "mean": 0.5850206737706738,
+          "sd": 0.06765965496980647
+        },
+        "recall": {
+          "mean": 0.39474637681159425,
+          "sd": 0.08297132213797223
+        },
+        "f1": {
+          "mean": 0.46779700564290616,
+          "sd": 0.06716903420145227
+        },
+        "roc_auc": {
+          "mean": 0.7208161966314142,
+          "sd": 0.058383669121508434
+        },
+        "pr_auc": {
+          "mean": 0.6016171105513376,
+          "sd": 0.06637015300911868
+        },
+        "brier": {
+          "mean": 0.2089243342137848,
+          "sd": 0.01589637722408081
+        }
+      },
+      "selection_counts": {
+        "Random forest": 2,
+        "Logistic regression": 3,
+        "XGBoost": 5
+      },
+      "calibration_comparison": [
+        {
+          "method": "Raw",
+          "metrics": {
+            "accuracy": 0.6732673267326733,
+            "precision": 0.6,
+            "recall": 0.5042016806722689,
+            "f1": 0.547945205479452,
+            "roc_auc": 0.7252922908293752,
+            "pr_auc": 0.5726166669777748,
+            "brier": 0.206174589726374,
+            "confusion_matrix": [
+              [
+                144,
+                40
+              ],
+              [
+                59,
+                60
+              ]
+            ]
+          }
+        },
+        {
+          "method": "Sigmoid",
+          "metrics": {
+            "accuracy": 0.6732673267326733,
+            "precision": 0.625,
+            "recall": 0.42016806722689076,
+            "f1": 0.5025125628140703,
+            "roc_auc": 0.7278498355864084,
+            "pr_auc": 0.5746414669956219,
+            "brier": 0.2064232934613873,
+            "confusion_matrix": [
+              [
+                154,
+                30
+              ],
+              [
+                69,
+                50
+              ]
+            ]
+          }
+        },
+        {
+          "method": "Isotonic",
+          "metrics": {
+            "accuracy": 0.6765676567656765,
+            "precision": 0.5981308411214953,
+            "recall": 0.5378151260504201,
+            "f1": 0.5663716814159292,
+            "roc_auc": 0.7168889294848374,
+            "pr_auc": 0.559339476197544,
+            "brier": 0.20649808465279523,
+            "confusion_matrix": [
+              [
+                141,
+                43
+              ],
+              [
+                55,
+                64
+              ]
+            ]
+          }
+        }
+      ],
+      "deployed_model": {
+        "file": "LCX.joblib",
+        "sha256": "37af871247cc5059402163ad66ba256b53114910519b7c0b649fd8c841c59ca7",
+        "family": "Random forest",
+        "params": {
+          "min_samples_leaf": 8
+        },
+        "calibration": "sigmoid",
+        "training_n": 303
+      }
+    },
+    "RCA": {
+      "n": 303,
+      "positive": 114,
+      "negative": 189,
+      "metrics": {
+        "accuracy": 0.6600660066006601,
+        "precision": 0.569620253164557,
+        "recall": 0.39473684210526316,
+        "f1": 0.46632124352331605,
+        "roc_auc": 0.7318295739348372,
+        "pr_auc": 0.576795606806884,
+        "brier": 0.20135383562098777,
+        "confusion_matrix": [
+          [
+            155,
+            34
+          ],
+          [
+            69,
+            45
+          ]
+        ]
+      },
+      "auc_ci": [
+        0.671628144435162,
+        0.789781165877657
+      ],
+      "dispersion": {
+        "accuracy": {
+          "mean": 0.6731967213114756,
+          "sd": 0.05999125270924431
+        },
+        "precision": {
+          "mean": 0.6043583607355986,
+          "sd": 0.12403664746322315
+        },
+        "recall": {
+          "mean": 0.4254940711462451,
+          "sd": 0.11270040936436715
+        },
+        "f1": {
+          "mean": 0.49034519314929204,
+          "sd": 0.1035025572177151
+        },
+        "roc_auc": {
+          "mean": 0.729231020077702,
+          "sd": 0.058391774802147786
+        },
+        "pr_auc": {
+          "mean": 0.6128117925831544,
+          "sd": 0.09312329746190241
+        },
+        "brier": {
+          "mean": 0.20421233382914744,
+          "sd": 0.020259308092189433
+        }
+      },
+      "selection_counts": {
+        "XGBoost": 5,
+        "Logistic regression": 5
+      },
+      "calibration_comparison": [
+        {
+          "method": "Raw",
+          "metrics": {
+            "accuracy": 0.6765676567656765,
+            "precision": 0.5754716981132075,
+            "recall": 0.5350877192982456,
+            "f1": 0.5545454545454546,
+            "roc_auc": 0.7273739905318852,
+            "pr_auc": 0.5660241851941229,
+            "brier": 0.20480435559340657,
+            "confusion_matrix": [
+              [
+                144,
+                45
+              ],
+              [
+                53,
+                61
+              ]
+            ]
+          }
+        },
+        {
+          "method": "Sigmoid",
+          "metrics": {
+            "accuracy": 0.6600660066006601,
+            "precision": 0.569620253164557,
+            "recall": 0.39473684210526316,
+            "f1": 0.46632124352331605,
+            "roc_auc": 0.7318295739348372,
+            "pr_auc": 0.576795606806884,
+            "brier": 0.20135383562098777,
+            "confusion_matrix": [
+              [
+                155,
+                34
+              ],
+              [
+                69,
+                45
+              ]
+            ]
+          }
+        },
+        {
+          "method": "Isotonic",
+          "metrics": {
+            "accuracy": 0.6633663366336634,
+            "precision": 0.5681818181818182,
+            "recall": 0.43859649122807015,
+            "f1": 0.49504950495049505,
+            "roc_auc": 0.7267938364429591,
+            "pr_auc": 0.5682062650812681,
+            "brier": 0.2021027208158609,
+            "confusion_matrix": [
+              [
+                151,
+                38
+              ],
+              [
+                64,
+                50
+              ]
+            ]
+          }
+        }
+      ],
+      "deployed_model": {
+        "file": "RCA.joblib",
+        "sha256": "f9c02107e2dd136e06a47344bae72892e8c88a95c9c0bc335d9d8110546ad8fc",
+        "family": "Logistic regression",
+        "params": {
+          "C": 0.1
+        },
+        "calibration": "sigmoid",
+        "training_n": 303
+      }
+    }
+  }
+}
