@@ -1,0 +1,12 @@
+.label.label { display: flex; flex-direction: column; align-items: stretch; gap: 3px; min-width: 112px; padding: 9px 11px; border-radius: 6px; background: #143447f2; box-shadow: 0 4px 18px #061c2c55; }
+.label.label:global(.selected) { border-color: #e2f0f5; background: #244c60f5; box-shadow: 0 0 0 1px #e2f0f530, 0 4px 18px #061c2c55; }
+.label.label:global(.selected)::after { content: none; }
+.labelValue { display: flex; align-items: center; gap: 7px; }
+.labelValue strong { font: 500 11px var(--mono); }
+.labelValue i { flex-shrink: 0; transition: background 700ms ease; }
+.probability { font: 500 12px var(--mono); margin-left: auto; color: #edf6fa; }
+.label:global(.selected) .labelValue strong::after { content: ' ✓'; font-size: 10px; }
+.change { font: 500 10px var(--mono); color: #ecf5f8; text-align: right; animation: reveal 250ms ease-out; }
+.change small { font: 9px var(--body); color: #c0d5df; margin-left: 2px; }
+@keyframes reveal { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .labelValue i { transition: none; } .change { animation: none; } }

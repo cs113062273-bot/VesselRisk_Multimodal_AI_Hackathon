@@ -22,6 +22,8 @@ export default function Home(){
   const [predictedSources,setPredictedSources]=useState<InputSources>({});
   const [caseId,setCaseId]=useState<string|null>(null);
   const [prediction,setPrediction]=useState<Prediction|null>(null);
+  const [previousPrediction,setPreviousPrediction]=useState<Prediction|null>(null);
+  const [predictionUpdatedAt,setPredictionUpdatedAt]=useState(0);
   const [focusVersion,setFocusVersion]=useState(0);
   const [viewerOpened,setViewerOpened]=useState(false);
   const markViewerOpened=useCallback(()=>setViewerOpened(true),[]);
@@ -70,6 +72,7 @@ export default function Home(){
       // Keep fast responses visible long enough to acknowledge the action.
       await new Promise<void>(resolve=>setTimeout(resolve,Math.max(0,600-elapsed)));
       if(request!==serial.current)return;
+      setPreviousPrediction(prediction);setPredictionUpdatedAt(Date.now());
       setPrediction(p);setPredictedFeatures({...features});setPredictedSources({...inputSources});setLatency(elapsed);setDirty(false);
       setProfileCollapsed(true);
     }catch(e){setError(e instanceof Error?e.message:'Prediction failed. Check the model service and try again.');}
@@ -94,7 +97,7 @@ export default function Home(){
       <PatientPanel {...{schema,cases,features,caseId,busy,inputSources}} collapsed={profileCollapsed} onToggle={()=>setProfileCollapsed(value=>!value)} onCase={changeCase} onChange={changeFeature} onPredict={predict} onImport={f=>{setFeatures(withCalculatedBmi(f));setInputSources({...sourcesFor(f,'imported'),BMI:'derived'});setCaseId(null);setDirty(true);setError('');}}/>
       <div className={`workspace-grid workspace-results ${analyticsStyles.layout}`}>
         <div className={`anatomy-workspace ${dirty&&prediction?'results-stale':''}`} id="prediction-results" tabIndex={-1} aria-label="Prediction results">
-          <HeartViewer {...{prediction,target,focusVersion,dirty}} initialOrbit={!viewerOpened} onOpened={markViewerOpened} onSelect={selectTarget}/>
+          <HeartViewer {...{prediction,previousPrediction,predictionUpdatedAt,target,focusVersion,dirty}} initialOrbit={!viewerOpened} onOpened={markViewerOpened} onSelect={selectTarget}/>
         </div>
         <ExplanationPanel {...{prediction,target,latency,dirty,busy}} onTarget={selectTarget}>
           <WorkspaceAnalytics {...{prediction,target,dirty}}/>

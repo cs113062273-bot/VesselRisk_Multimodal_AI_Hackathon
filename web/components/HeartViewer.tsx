@@ -2,12 +2,13 @@
 import { Suspense, useEffect, useMemo, useRef, useState, Component, type ReactNode } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { BufferAttribute, BufferGeometry, Color, DoubleSide, Vector3 } from 'three';
+import { BufferAttribute, BufferGeometry, Color, DoubleSide, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from 'three';
 import { RotateCcw, Play, Pause, Layers, Focus, Maximize2, Minimize2, BookOpen, ChevronDown } from 'lucide-react';
-import { NAMES, Prediction, riskColor, Target, TARGETS, VESSELS, Vessel } from '@/lib/types';
+import { NAMES, pct, Prediction, riskColor, Target, TARGETS, VESSELS, Vessel } from '@/lib/types';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { ARTERY_GUIDE } from '@/lib/coronary-anatomy';
 import InfoPopover from './InfoPopover';
+import styles from './HeartViewer.module.css';
 
 interface Part { id:string;name:string;target:Vessel|null;surface:string;positions:number;normals:number;indices:number;vertexCount:number;indexCount:number; }
 interface Anatomy { parts:Part[];bytes:number;triangles:number;revision:string; }
@@ -23,17 +24,41 @@ function AnatomyMesh({item,prediction,selected,xray,isolate,onSelect}:{item:Load
   const vessel=item.part.target;
   const active=!!vessel&&(selected===null||vessel===selected);
   const p=vessel?prediction?.targets[vessel].probability:undefined;
-  const targetColor=useMemo(()=>new Color(vessel?riskColor(p):item.part.surface==='great'?'#8096a3':'#b87b7c'),[vessel,p,item.part.surface]);
+  const targetColor=useMemo(()=>new Color(vessel?riskColor(p):item.part.surface==='great'?'#8096a3':selected?'#9e747b':'#b87b7c'),[vessel,p,item.part.surface,selected]);
+  const [initialColor]=useState(()=>targetColor.clone());
+  const material=useRef<MeshStandardMaterial>(null);
+  const silhouette=useRef<MeshBasicMaterial>(null);
+  const {invalidate}=useThree();
+  const reducedMotion=useRef(false);
+  useEffect(()=>{reducedMotion.current=window.matchMedia('(prefers-reduced-motion: reduce)').matches;invalidate();},[targetColor,active,xray,invalidate]);
+  const targetOpacity=vessel?(active?1:.62):xray?.12:selected?.82:.91;
+  const targetEmission=vessel?(selected===vessel?.85:active?.45:.12):0;
+  useFrame((_,delta)=>{
+    if(!material.current)return;
+    const value=material.current;
+    const factor=reducedMotion.current?1:1-Math.exp(-7*delta);
+    value.color.lerp(targetColor,factor);
+    if(vessel)value.emissive.lerp(targetColor,factor);
+    value.opacity+=(targetOpacity-value.opacity)*factor;
+    value.emissiveIntensity+=(targetEmission-value.emissiveIntensity)*factor;
+    if(silhouette.current)silhouette.current.color.copy(value.color);
+    const colorError=Math.abs(value.color.r-targetColor.r)+Math.abs(value.color.g-targetColor.g)+Math.abs(value.color.b-targetColor.b);
+    if(colorError>.001||Math.abs(value.opacity-targetOpacity)>.001||Math.abs(value.emissiveIntensity-targetEmission)>.001)invalidate();
+  });
   if(isolate && !vessel)return null;
-  return <mesh geometry={item.geometry} onClick={vessel?(e)=>{e.stopPropagation();onSelect(vessel);}:undefined}
+  return <>
+    {vessel===selected&&!isolate&&<mesh geometry={item.geometry} renderOrder={1} raycast={()=>null}>
+      <meshBasicMaterial ref={silhouette} color={targetColor} side={DoubleSide} transparent opacity={.16} depthTest={false} depthWrite={false}/>
+    </mesh>}
+    <mesh geometry={item.geometry} onClick={vessel?(e)=>{e.stopPropagation();onSelect(vessel);}:undefined}
     onPointerOver={vessel?(e)=>{e.stopPropagation();document.body.style.cursor='pointer';}:undefined}
     onPointerOut={vessel?()=>{document.body.style.cursor='auto';}:undefined} renderOrder={vessel?2:0}>
-    <meshStandardMaterial color={targetColor} side={DoubleSide}
+    <meshStandardMaterial ref={material} color={initialColor} emissive={vessel?initialColor:'#000000'} emissiveIntensity={vessel?.45:0} side={DoubleSide}
       roughness={vessel?.32:.57} metalness={vessel?.22:.1}
-      emissive={vessel?riskColor(p):'#000000'} emissiveIntensity={vessel?(active?.48:.07):0}
-      transparent={!vessel||!active} opacity={vessel?(active?1:.5):xray?.12:.91}
+      transparent
       depthWrite={!!vessel||!xray}/>
-  </mesh>;
+    </mesh>
+  </>;
 }
 
 const CAMERA_DISTANCE=8.4;
@@ -71,7 +96,9 @@ function moveLabel(el:HTMLButtonElement,x:number,y:number,visible:boolean){
   el.style.visibility=visible?'visible':'hidden';
 }
 
-function VesselAnchors({items,labels,connectors}:{items:Loaded[];labels:React.RefObject<Partial<Record<Vessel,HTMLButtonElement|null>>>;connectors:React.RefObject<Partial<Record<Vessel,SVGGElement|null>>>}){
+function VesselAnchors({items,labels,connectors,selected,layoutVersion}:{items:Loaded[];labels:React.RefObject<Partial<Record<Vessel,HTMLButtonElement|null>>>;connectors:React.RefObject<Partial<Record<Vessel,SVGGElement|null>>>;selected:Vessel|null;layoutVersion:string}){
+  const {invalidate}=useThree();
+  useEffect(()=>{invalidate();},[layoutVersion,selected,invalidate]);
   const point=useMemo(()=>new Vector3(),[]);
   const anchors=useMemo(()=>items.map(item=>{
     const positions=item.geometry.getAttribute('position');
@@ -82,7 +109,9 @@ function VesselAnchors({items,labels,connectors}:{items:Loaded[];labels:React.Re
     return {vessel:item.part.target!,samples};
   }),[items]);
   useFrame(({camera,size})=>{
-    for(const {vessel,samples} of anchors){
+    const occupied:{x:number;y:number;width:number;height:number}[]=[];
+    const ordered=[...anchors].sort((a,b)=>Number(b.vessel===selected)-Number(a.vessel===selected));
+    for(const {vessel,samples} of ordered){
       const el=labels.current[vessel];if(!el)continue;
       // Anchor to a real vertex on the near side of this artery's trunk.
       // A bounding-box center can lie inside the heart, away from the vessel.
@@ -90,17 +119,29 @@ function VesselAnchors({items,labels,connectors}:{items:Loaded[];labels:React.Re
       for(const sample of samples){const next=sample.distanceToSquared(camera.position);if(next<distance){nearest=sample;distance=next;}}
       point.copy(nearest).project(camera);
       const x=(point.x*.5+.5)*size.width,y=(-point.y*.5+.5)*size.height;
-      const offset=vessel==='RCA'?-85:30;
-      const labelX=Math.max(8,Math.min(size.width-el.offsetWidth-8,x+offset));
-      const labelY=Math.max(8,Math.min(size.height-el.offsetHeight-8,y-16));
+      const width=el.offsetWidth,height=el.offsetHeight;
+      const candidates=[];
+      // Place the selected label first, then fit the remaining labels around it.
+      // Every connector still terminates on a real vessel vertex.
+      for(const side of (vessel==='RCA'?[-1,1]:[1,-1]))for(const shift of [0,-1,1,-2,2]){
+        const cx=Math.max(8,Math.min(size.width-width-8,x+(side<0?-width-28:28)));
+        const cy=Math.max(38,Math.min(size.height-height-8,y-height/2+shift*(height+10)));
+        const overlap=occupied.reduce((sum,box)=>sum+Math.max(0,Math.min(cx+width+8,box.x+box.width)-Math.max(cx-8,box.x))*Math.max(0,Math.min(cy+height+8,box.y+box.height)-Math.max(cy-8,box.y)),0);
+        const edgeDistance=Math.abs(Math.max(cx,Math.min(cx+width,x))-x);
+        const preferred=vessel==='RCA'?-1:1;
+        candidates.push({x:cx,y:cy,cost:overlap*100+Math.abs(shift)*30+edgeDistance+(side===preferred?0:12)});
+      }
+      candidates.sort((a,b)=>a.cost-b.cost);
+      const {x:labelX,y:labelY}=candidates[0];
       const visible=point.z>-1&&point.z<1&&x>=0&&x<=size.width&&y>=0&&y<=size.height;
       moveLabel(el,labelX,labelY,visible);
+      if(visible)occupied.push({x:labelX,y:labelY,width,height});
       const group=connectors.current[vessel];
       if(group){
         group.style.setProperty('visibility',visible?'visible':'hidden');
         const line=group.children[0],circle=group.children[1];
         line.setAttribute('x1',String(x));line.setAttribute('y1',String(y));
-        line.setAttribute('x2',String(offset<0?labelX+el.offsetWidth:labelX));line.setAttribute('y2',String(labelY+el.offsetHeight/2));
+        line.setAttribute('x2',String(Math.max(labelX,Math.min(labelX+width,x))));line.setAttribute('y2',String(labelY+height/2));
         circle.setAttribute('cx',String(x));circle.setAttribute('cy',String(y));
       }
     }
@@ -108,7 +149,7 @@ function VesselAnchors({items,labels,connectors}:{items:Loaded[];labels:React.Re
   return null;
 }
 
-export default function HeartViewer({prediction,target,focusVersion,dirty,initialOrbit,onOpened,onSelect}:{prediction:Prediction|null;target:Target;focusVersion:number;dirty:boolean;initialOrbit:boolean;onOpened:()=>void;onSelect:(v:Target)=>void}){
+export default function HeartViewer({prediction,previousPrediction,predictionUpdatedAt,target,focusVersion,dirty,initialOrbit,onOpened,onSelect}:{prediction:Prediction|null;previousPrediction:Prediction|null;predictionUpdatedAt:number;target:Target;focusVersion:number;dirty:boolean;initialOrbit:boolean;onOpened:()=>void;onSelect:(v:Target)=>void}){
   const [loaded,setLoaded]=useState<Loaded[]>([]);
   const [error,setError]=useState('');
   const [spin,setSpin]=useState(initialOrbit);
@@ -119,6 +160,12 @@ export default function HeartViewer({prediction,target,focusVersion,dirty,initia
   const [reset,setReset]=useState(0);
   const [full,setFull]=useState(false);
   const [resetVersion,setResetVersion]=useState(0);
+  const [clock,setClock]=useState(()=>Date.now());
+  useEffect(()=>{
+    const timer=window.setTimeout(()=>setClock(Date.now()),Math.max(0,predictionUpdatedAt+6500-Date.now()));
+    return ()=>window.clearTimeout(timer);
+  },[predictionUpdatedAt]);
+  const showChanges=!!previousPrediction&&!dirty&&predictionUpdatedAt+6500>clock;
   const labels=useRef<Partial<Record<Vessel,HTMLButtonElement|null>>>({});
   const connectors=useRef<Partial<Record<Vessel,SVGGElement|null>>>({});
   useEffect(()=>{
@@ -169,12 +216,21 @@ export default function HeartViewer({prediction,target,focusVersion,dirty,initia
         <directionalLight position={[2,3,-4]} intensity={2.6} color="#77ded1"/>
         <Suspense fallback={null}>
           <group position={[0,-.25,0]}>{loaded.map(item=><AnatomyMesh key={item.part.id} {...{item,prediction,selected,xray,isolate}} onSelect={choose}/>)}</group>
-          <VesselAnchors items={labelParts} labels={labels} connectors={connectors}/>
+          <VesselAnchors items={labelParts} {...{labels,connectors,selected}} layoutVersion={`${predictionUpdatedAt}-${showChanges}-${dirty}`}/>
           <CameraGuide selected={target} focusVersion={focusVersion>resetVersion?focusVersion:0} spin={rotating}/>
         </Suspense>
       </Canvas></CanvasBoundary>}
       <svg className="vessel-connectors" aria-hidden="true">{VESSELS.map(v=><g key={v} ref={el=>{connectors.current[v]=el;}} className={selected===v?'active':''}><line/><circle r="3"/></g>)}</svg>
-      {labelParts.map(({part})=><button key={part.id} ref={el=>{labels.current[part.target!]=el;}} className={`artery-label projected-label ${selected===part.target?'selected':''}`} onClick={()=>choose(part.target!)} aria-pressed={selected===part.target} aria-label={`Select ${part.target} in 3D`}><i style={{background:riskColor(prediction?.targets[part.target!].probability)}}/>{part.target}</button>)}
+      {labelParts.map(({part})=>{
+        const vessel=part.target!;
+        const probability=prediction?.targets[vessel].probability;
+        const change=prediction&&previousPrediction?(probability!-previousPrediction.targets[vessel].probability)*100:null;
+        const changing=showChanges&&change!==null&&Math.abs(change)>=.05;
+        return <button key={part.id} ref={el=>{labels.current[vessel]=el;}} className={`artery-label projected-label ${styles.label} ${selected===vessel?'selected':''}`} onClick={()=>choose(vessel)} aria-pressed={selected===vessel} aria-label={`Select ${vessel} in 3D`} aria-describedby={`artery-probability-${vessel}`} title={`${NAMES[vessel]} · ${probability===undefined?'No prediction yet':`${dirty?'Previous prediction':'Estimated stenosis probability'}: ${pct(probability)}`}`}>
+          <span className={styles.labelValue}><i style={{background:riskColor(probability)}}/><strong>{vessel}</strong><span id={`artery-probability-${vessel}`} className={styles.probability}>{probability===undefined?'—':pct(probability)}</span></span>
+          {changing&&<span key={predictionUpdatedAt} className={styles.change} data-change-pp={change!.toFixed(1)} title="Compared with the previous prediction">{change!>0?'+':'−'}{Math.abs(change!).toFixed(1)} pp <small>vs last</small></span>}
+        </button>;
+      })}
       <div className="view-caption">Drag to rotate · Scroll to zoom · Click a vessel</div>
     </div>
     <div className="viewer-controls"><button onClick={()=>{setSpin(!rotating);setSpinVersion(focusVersion);}} aria-pressed={rotating}>{rotating?<Pause size={15}/>:<Play size={15}/>}<span>{rotating?'Pause':'Orbit'}</span></button><button onClick={()=>setXray(!xray)} aria-pressed={xray}><Layers size={15}/><span>X-ray</span></button><button onClick={()=>setIsolate(!isolate)} aria-pressed={isolate}><Focus size={15}/><span>Vessels only</span></button><button onClick={()=>{setReset(v=>v+1);setSpin(false);setResetVersion(focusVersion);}}><RotateCcw size={15}/><span>Reset</span></button></div>

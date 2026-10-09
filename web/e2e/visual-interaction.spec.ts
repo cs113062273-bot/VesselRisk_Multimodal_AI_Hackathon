@@ -46,6 +46,8 @@ test('artery navigation, readable explanations and updated predictions', async (
   const initial = await predict();
   const explanation = page.locator('.explanation-panel');
   for (const t of ['CAD', 'LAD', 'LCX', 'RCA']) await expect(explanation.getByRole('tab', { name: t, exact: true }).locator('strong')).toHaveText(`${(initial.targets[t].probability * 100).toFixed(1)}%`);
+  for (const vessel of ['LAD', 'LCX', 'RCA']) await expect(page.getByRole('button', { name: `Select ${vessel} in 3D` })).toContainText(`${(initial.targets[vessel].probability * 100).toFixed(1)}%`);
+  await expect(page.locator('[data-change-pp]')).toHaveCount(0);
   await expect(explanation.locator('.contribution-row').first()).toContainText('Yes');
   await expect(page.locator('.model-details')).not.toHaveAttribute('open');
   await page.getByText('All 55 inputs & calculation details', { exact: true }).click();
@@ -76,6 +78,10 @@ test('artery navigation, readable explanations and updated predictions', async (
   await page.getByRole('button', { name: 'Expand patient profile' }).click();
   await page.getByLabel('Age', { exact: true }).fill('85');
   const updated = await predict();
+  for (const vessel of ['LAD', 'LCX', 'RCA']) {
+    const change = (updated.targets[vessel].probability - initial.targets[vessel].probability) * 100;
+    if (Math.abs(change) >= .05) await expect(page.getByRole('button', { name: `Select ${vessel} in 3D` }).locator('[data-change-pp]')).toHaveAttribute('data-change-pp', change.toFixed(1));
+  }
   for (const vessel of ['LAD', 'LCX', 'RCA']) {
     await explanation.getByRole('tab', { name: vessel, exact: true }).click();
     await page.getByRole('button', { name: 'Expand anatomy' }).click();
