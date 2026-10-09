@@ -5,7 +5,7 @@ import path from 'node:path';
 test('real prediction → coronary anatomy → local explanation → evidence → patient edit',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');
-  await expect(page.getByRole('heading',{name:'Explore coronary risk.'})).toBeVisible();
+  await expect(page.getByRole('region',{name:'Patient inputs',exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Predict coronary risk',exact:true}).click();
   await expect(page.getByRole('button', { name: 'Export case', exact: true })).toBeEnabled();
   await expect(page.locator('.explanation-panel').getByRole('heading',{name:'Left anterior descending',exact:true})).toBeVisible();
@@ -29,10 +29,10 @@ test('real prediction → coronary anatomy → local explanation → evidence �
   await page.getByRole('button',{name:'Vessels only',exact:true}).click();
   await page.getByRole('button',{name:'Vessels only',exact:true}).click();
   await page.getByRole('button',{name:'X-ray',exact:true}).click();
-  await page.getByRole('button',{name:'Reveal recorded outcomes'}).click();
-  await expect(page.locator('.recorded-outcomes')).toBeVisible();
-  await page.getByRole('button',{name:'Evidence Lab',exact:true}).click();
-  await expect(page.getByRole('heading',{name:'Every claim, inspectable.'})).toBeVisible();
+  await expect(page.locator('.case-review, .recorded-outcomes, .prediction-warnings')).toHaveCount(0);
+  await page.getByRole('button',{name:'Model evidence',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Model evidence'})).toBeVisible();
+  await page.getByRole('tab',{name:'Validation',exact:true}).click();
   await page.getByRole('tab',{name:'CAD',exact:true}).click();
   await expect(page.locator('.auc-feature')).toContainText('0.925');
   await page.screenshot({path:path.join(outDir,'evidence-validation.png'),fullPage:true});

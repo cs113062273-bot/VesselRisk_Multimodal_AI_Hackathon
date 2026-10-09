@@ -1,5 +1,5 @@
 {
-  "captured_utc": "2026-10-02T11:43:05.107Z",
+  "captured_utc": "2026-10-09T07:22:28.509Z",
   "source": "Real local production frontend + FastAPI + shipped model artifacts; software WebGL",
   "captures": [
     {
@@ -32,7 +32,7 @@
     },
     {
       "file": "08-global-shap.png",
-      "description": "Held-out global SHAP and explanation ranking stability."
+      "description": "Held-out global SHAP plus local seed, computation and training-background sensitivity evidence."
     },
     {
       "file": "09-robustness-failures.png",

@@ -1,0 +1,51 @@
+{
+  "checked_utc": "2026-10-09T07:27:34.390752+00:00",
+  "scope": "Current desktop snapshot, pinned local environment; no external clinical validation",
+  "checks": {
+    "python": {
+      "command": "python -m pytest -q",
+      "passed": 30
+    },
+    "frontend": [
+      "npm run typecheck",
+      "npm run lint",
+      "npm run build"
+    ],
+    "screenshots": {
+      "count": 10,
+      "browser_errors": []
+    },
+    "pdf": {
+      "pages": 6,
+      "all_pages_rendered_and_visually_inspected": true
+    },
+    "browser": {
+      "passed": 5,
+      "scope": "desktop source workspace",
+      "retry_note": "One initial export assertion timed out while inference was pending; explicit API-response synchronization passed on rerun."
+    },
+    "extracted_package": {
+      "archive_sha256": "8f106a15183c5b1c8b5b00eccdc06bfb583491db232dee9c14969b16cff6c9ab",
+      "files_verified": 519,
+      "extracted_to": "C:\\Users\\chinh\\Desktop\\MultimodelAI\\tmp\\review-validation\\8f106a15183c\\VesselRisk",
+      "crc_and_manifest": "passed",
+      "scientific_api_checks": 30,
+      "frozen_metrics": "passed",
+      "desktop_browser_checks": 3,
+      "fresh_frontend_dependencies": "npm ci",
+      "environment": "Pinned existing Python environment; extracted source and fresh frontend dependencies. Not a fresh Python installation.",
+      "status": "passed",
+      "scope": "Core runtime is unchanged in the final documentation/validation-record update."
+    }
+  },
+  "fingerprints": {
+    "ml/artifacts/integrity.json": "6b1d8df54430d3ea9829cf711316fdb16a1e8cc6779a3a6224c6b5e6f804464d",
+    "experiments/reliability/results.json": "7247cade9862bc7ceccb36e53990438c92350fbbe5eee191d68fc85a1d8913b6",
+    "report/VesselRisk-Track-A.pdf": "8670fdd50fc2d7f942347598a1c09b0282033f3a939ea7a354107d16fc415a46"
+  },
+  "outstanding": [
+    "Final 3-10 minute video recording and YouTube upload",
+    "Submitter team and public links",
+    "Docker execution"
+  ]
+}

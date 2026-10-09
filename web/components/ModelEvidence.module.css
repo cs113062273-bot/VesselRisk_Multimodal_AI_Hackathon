@@ -1,0 +1,51 @@
+.page:global(.evidence-lab) { max-width: 1740px; padding: 22px 30px 32px; }
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin-bottom: 22px; }
+.header h1 { font-size: 26px; letter-spacing: -.8px; }
+.header p { color: var(--reading); font-size: 12px; margin-top: 6px; }
+.snapshot { text-align: right; font-size: 11px; color: var(--reading); line-height: 1.8; }
+.snapshot strong { display: block; color: var(--navy); font: 12px var(--mono); }
+.body { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; align-items: start; }
+.navigation { position: sticky; top: 18px; background: white; border: 1px solid var(--line); border-radius: 10px; padding: 12px 8px; }
+.navigation button { display: block; width: 100%; text-align: left; padding: 12px; border-radius: 6px; margin: 2px 0; }
+.navigation button[aria-selected='true'] { background: #e6f4f1; color: #0e7975; box-shadow: inset 3px 0 #128c88; }
+.navigation strong { font-size: 12px; display: block; }
+.navigation span { display: block; font-size: 10px; color: var(--reading); margin-top: 4px; }
+.navigation p { font-size: 10px; color: var(--reading); padding: 16px 12px 4px; border-top: 1px solid var(--line); margin-top: 10px; }
+.detail { min-width: 0; }
+.detail :global(.lab-target-heading) { margin: 0 0 18px; padding-bottom: 14px; }
+.detail :global(.lab-target-heading .target-tabs) { margin: 0; min-width: 270px; }
+.detail :global(.curves-grid) { background: white; padding: 18px; border: 1px solid var(--line); border-radius: 10px; gap: 22px; margin: 18px 0; }
+.detail :global(.curve-section) { border-bottom: 0; padding: 0; }
+.detail :global(.lab-two-columns) { background: white; padding: 20px; border: 1px solid var(--line); border-radius: 10px; gap: 32px; margin: 18px 0; }
+.detail :global(.validation-summary) { padding: 20px; background: white; border: 1px solid var(--line); border-radius: 10px; }
+.detail :global(.research-thresholds), .detail :global(.registry-section), .detail :global(.anatomy-provenance) { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-top: 18px; }
+.detail :global(.evidence-details) { padding: 10px 16px; border: 1px solid var(--line); border-radius: 8px; background: white; margin: 14px 0; }
+.detail :global(.target-overview) { margin: 0; padding: 0; }
+.sectionHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.sectionHeading h2 { font-size: 17px; }
+.sectionHeading p { font-size: 11px; color: var(--reading); margin-top: 5px; }
+.sectionHeading > span { font-size: 10px; color: var(--reading); }
+.workflow { margin-bottom: 22px; }
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #eaf2f5; border: 1px solid #d8e5ec; border-radius: 10px; }
+.steps > div { position: relative; padding: 18px 22px; }
+.steps > div + div { border-left: 1px solid #d2e0e7; }
+.steps svg { color: #1c6979; }
+.steps h3 { font-size: 12px; margin: 10px 0 7px; }
+.steps strong { font-size: 10px; font-weight: 600; }
+.steps p { font-size: 10px; line-height: 1.6; margin-top: 5px; color: var(--reading); }
+.steps .stepArrow { position: absolute; right: -9px; top: 24px; background: #eaf2f5; z-index: 1; }
+.results { background: white; padding: 20px 22px; border: 1px solid var(--line); border-radius: 10px; }
+.results table { margin: 0; }
+.results th { font-size: 10px; }
+.results td { font-size: 12px; padding: 15px 9px; color: var(--ink); }
+.results td:first-child { font-family: var(--body); }
+.results td:first-child b { color: var(--navy); font: 600 13px var(--mono); }
+.results td:first-child span { display: block; color: var(--reading); font-size: 10px; margin-top: 3px; }
+.results td strong { color: #0d807c; }
+.results td button { display: flex; padding: 8px; color: #0e7975; border-radius: 5px; }
+.results td button:hover { background: #e6f4f1; }
+.caveat { font-size: 11px; line-height: 1.7; color: #806125; margin-top: 14px; }
+.overviewGraph { padding: 20px 22px; border: 1px solid var(--line); border-radius: 10px; background: white; margin-top: 18px; }
+.foundation { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; margin-top: 20px; }
+.foundation h3 { font-size: 12px; margin-bottom: 7px; }
+.foundation p { font-size: 11px; color: var(--reading); }

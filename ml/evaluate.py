@@ -5,9 +5,11 @@ import json
 import numpy as np
 from ml.schema import ARTIFACTS, DATA_PATH, ROOT, load_data
 from ml.train import metrics
+from ml.integrity import verify_manifest
 
 
 def main():
+    verify_manifest()
     evidence=json.loads((ARTIFACTS/'evidence.json').read_text(encoding='utf-8'))
     registry=json.loads((ARTIFACTS/'registry.json').read_text(encoding='utf-8'))
     _,ys,_=load_data()

@@ -1,5 +1,39 @@
 import { test, expect } from '@playwright/test';
 
+test('workspace and evidence share stable desktop header geometry and export location', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Predict coronary risk', exact: true })).toBeEnabled();
+  await expect(page.getByText('Explore coronary risk.', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Predict a patient profile. Select an artery. See what shaped its estimate.', { exact: true })).toHaveCount(0);
+  const geometry = () => page.locator('.app-header').evaluate(header => {
+    const box = (element: Element) => {
+      const { x, y, width, height } = element.getBoundingClientRect();
+      return { x, y, width, height };
+    };
+    return [header, header.querySelector('.brand')!, header.querySelector('nav')!,
+      ...header.querySelectorAll('nav button'), header.querySelector('.header-export')!,
+      header.querySelector('.icon-button')!].map(box);
+  });
+  for (const width of [1280, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const workspace = await geometry();
+    expect(workspace[0].height).toBe(76);
+    await page.getByRole('button', { name: 'Model evidence', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Model evidence' })).toBeVisible();
+    const evidence = await geometry();
+    expect(evidence).toEqual(workspace);
+    await expect(page.getByRole('button', { name: 'Export evidence', exact: true })).toHaveCount(1);
+    await expect(page.locator('.app-header').getByRole('button', { name: 'Export evidence', exact: true })).toBeEnabled();
+    await page.getByRole('button', { name: 'Patient workspace', exact: true }).click();
+    expect(await geometry()).toEqual(workspace);
+    await expect(page.locator('.app-header').getByRole('button', { name: 'Export case', exact: true })).toBeDisabled();
+  }
+  await page.getByRole('button', { name: 'Model evidence', exact: true }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export evidence', exact: true }).click();
+  expect((await download).suggestedFilename()).toBe('vesselrisk-evidence.json');
+});
+
 test('optional examples use patient descriptions and fill editable inputs', async ({ page, request }) => {
   await page.goto('/');
   const example = page.getByRole('combobox', { name: 'Example(Optional)', exact: true });

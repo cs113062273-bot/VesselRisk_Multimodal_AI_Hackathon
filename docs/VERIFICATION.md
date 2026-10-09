@@ -1,5 +1,9 @@
 # Verification record
 
+## Current delivery snapshot, 2026-10-09
+
+The current reliability audit and complete inference integrity checks supersede the earlier counts and UI descriptions below. Current commands, outcomes, screenshot timestamps and extracted-package validation are recorded in `../review/BUILD_VALIDATION.json`. The project now targets desktop only. The six-page report, ten review captures and demonstration script have been synchronized with the current interface; removed outcome-reveal controls are not part of the demonstration. Earlier entries below are historical records.
+
 ## Model recheck, 2026-10-09
 
 The deployed four model bundles, OOD artifact and original evaluation evidence match the final-audit fingerprints byte for byte. Recomputed OOF AUC remains CAD .9250, LAD .8388, LCX .7278 and RCA .7318. Training/inference target guards, repeated held-out split coverage, exported estimator identity and calibrated-probability SHAP reconstruction were rechecked.

@@ -1,25 +1,37 @@
 'use client';
 import { useState } from 'react';
 import { CartesianGrid, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts';
-import { Check, Download, ExternalLink, Fingerprint, FlaskConical, ShieldCheck } from 'lucide-react';
-import { downloadJSON, Evidence, NAMES, pct, Point, Registry, score, Target, TARGETS } from '@/lib/types';
-import { TargetOverview, ThresholdTradeoff } from './EvidenceCharts';
+import { Check, ExternalLink, Fingerprint, FlaskConical, ShieldCheck } from 'lucide-react';
+import { Evidence, NAMES, pct, Point, Registry, score, Target, TARGETS } from '@/lib/types';
+import { ThresholdTradeoff } from './EvidenceCharts';
+import ReliabilityDetails from './ReliabilityDetails';
+import ModelEvidenceOverview from './ModelEvidenceOverview';
+import styles from './ModelEvidence.module.css';
 
 function Curve({data,title,subtitle,color='#138c91',type='roc',baseline}:{data:Point[];title:string;subtitle:string;color?:string;type?:'roc'|'pr'|'calibration';baseline?:number}){
   return <section className="curve-section"><h3>{title}</h3><p>{subtitle}</p><div className="curve-chart"><ResponsiveContainer width="100%" height="100%"><ScatterChart margin={{top:12,right:15,bottom:28,left:0}}><CartesianGrid stroke="#e7edf0" strokeDasharray="3 3"/><XAxis type="number" dataKey="x" domain={[0,1]} ticks={[0,.25,.5,.75,1]} tick={{fontSize:10,fill:'#78909b'}} axisLine={false} tickLine={false} label={{value:type==='roc'?'False positive rate':type==='pr'?'Recall':'Predicted probability',position:'bottom',offset:12,fontSize:11,fill:'#607482'}}/><YAxis type="number" dataKey="y" domain={[0,1]} ticks={[0,.25,.5,.75,1]} width={35} tick={{fontSize:10,fill:'#78909b'}} axisLine={false} tickLine={false}/><Tooltip formatter={(v)=>Number(v).toFixed(3)} cursor={{strokeDasharray:'3 3'}}/>{type==='pr'?<ReferenceLine y={baseline??0} stroke="#b8c4cb" strokeDasharray="4 4"/>:<ReferenceLine segment={[{x:0,y:0},{x:1,y:1}]} stroke="#b8c4cb" strokeDasharray="4 4"/>}<Scatter name={title} data={data} fill={color} line={{stroke:color,strokeWidth:2.5}} isAnimationActive={false} shape={type==='calibration'?'circle':()=> <g/>}/></ScatterChart></ResponsiveContainer></div></section>;
 }
 
-export default function EvidenceLab({evidence,registry,target,onTarget}:{evidence:Evidence;registry:Registry;target:Target;onTarget:(t:Target)=>void}){
-  const [tab,setTab]=useState('Validation');
+export default function EvidenceLab({evidence,registry}:{evidence:Evidence;registry:Registry}){
+  const [tab,setTab]=useState('Overview');
+  const [target,onTarget]=useState<Target>('CAD');
   const ev=evidence.targets[target];
   const refinement=evidence.refinement?.targets[target];
-  return <main className="evidence-lab page-enter">
-    <div className="lab-intro"><div><span className="eyebrow">MODEL EVIDENCE LAB</span><h1>Every claim, inspectable.</h1><p>Measured results from 303 patients. All primary predictions are out of fold.</p><p className="evaluation-method"><strong>How was this evaluated?</strong> 5 × 2 outer CV · 3-fold inner selection · calibration within training folds · repeat-averaged held-out predictions.</p></div><button className="secondary-button" onClick={()=>downloadJSON('vesselrisk-evidence.json',evidence)}><Download size={16}/>Export evidence</button></div>
-    <div className="cohort-band"><div><b>303</b><span>patients</span></div><div><b>55</b><span>eligible clinical inputs</span></div><div><b>5 × 2</b><span>outer folds × repeats</span></div><div><b>3</b><span>candidate model families</span></div><div className="audit-pass"><ShieldCheck size={24}/><span><strong>Leakage audit passed</strong><small>Four target columns excluded</small></span></div></div>
-    <div className="lab-navigation"><div className="lab-tabs" role="tablist" aria-label="Evidence sections">{['Validation','Interpretability','Robustness','Data & provenance'].map(t=><button key={t} role="tab" aria-selected={tab===t} onClick={()=>setTab(t)}>{t}</button>)}</div><div className="target-tabs" role="tablist" aria-label="Evidence target">{TARGETS.map(t=><button role="tab" aria-selected={target===t} key={t} onClick={()=>onTarget(t)}>{t}</button>)}</div></div>
-    {tab==='Validation'&&<TargetOverview evidence={evidence} target={target} onTarget={onTarget}/>}
-    <div className="lab-target-heading"><div><span className="eyebrow">{target} MODEL</span><h2>{NAMES[target]}</h2></div><span>Full-cohort model: {registry.models[target].family} · sigmoid calibration</span></div>
+  const sections = [
+    {name:'Overview',detail:'Data to evaluated predictions'},
+    {name:'Validation',detail:'Classification & calibration'},
+    {name:'Interpretability',detail:'Global factors & sensitivity'},
+    {name:'Robustness',detail:'Subgroups, failures & limits'},
+    {name:'Data & provenance',detail:'Sources, hashes & anatomy'},
+  ];
+  return <main className={`evidence-lab page-enter ${styles.page}`}>
+    <header className={styles.header}><div><h1>Model evidence</h1><p>How the models are built and evaluated. Fixed cohort results, independent of patient inputs.</p></div><div className={styles.snapshot}><strong>{registry.version}</strong>303 patients / 55 inputs / internal validation only</div></header>
+    <div className={styles.body}>
+      <aside className={styles.navigation}><div role="tablist" aria-label="Evidence sections" aria-orientation="vertical">{sections.map(s=><button key={s.name} role="tab" aria-label={s.name} aria-selected={tab===s.name} onClick={()=>setTab(s.name)}><strong>{s.name}</strong><span>{s.detail}</span></button>)}</div><p><ShieldCheck size={14}/> Four outcome columns excluded before preprocessing.</p></aside>
+      <div className={styles.detail}>
+        {tab==='Overview'?<ModelEvidenceOverview {...{evidence,registry,target}} onValidation={t=>{onTarget(t);setTab('Validation');}}/>:<div className="lab-target-heading"><div><span className="eyebrow">{tab==='Validation'?'HELD-OUT PERFORMANCE':tab==='Interpretability'?'EXPLANATION EVIDENCE':tab.toUpperCase()}</span><h2>{NAMES[target]}</h2></div><div className="target-tabs" role="tablist" aria-label="Evidence target">{TARGETS.map(t=><button role="tab" aria-selected={target===t} key={t} onClick={()=>onTarget(t)}>{t}</button>)}</div></div>}
     {tab==='Validation'&&<>
+      <ReliabilityDetails evidence={evidence.reliability} target={target} mode="calibration"/>
       <div className="validation-summary"><div className="auc-feature"><span>Held-out ROC-AUC</span><strong>{score(ev.metrics.roc_auc)}</strong><p>95% conditional bootstrap interval<br/><b>{score(ev.auc_ci[0])} – {score(ev.auc_ci[1])}</b></p></div><div className="metric-row">{(['accuracy','precision','recall','f1','pr_auc','brier'] as const).map(m=><div key={m}><span>{m==='pr_auc'?'PR-AUC (AP)':m==='f1'?'F1 score':m==='brier'?'Brier ↓':m[0].toUpperCase()+m.slice(1)}</span><b>{score(ev.metrics[m])}</b><small>fold {score(ev.dispersion[m].mean)} ± {score(ev.dispersion[m].sd)}</small></div>)}</div></div>
       <div className="lab-note"><FlaskConical size={16}/><p>{evidence.protocol.pooled} {evidence.protocol.ci}.</p></div>
       <div className="curves-grid"><Curve data={ev.curves.roc} title="ROC curve" subtitle="True positive rate vs false positive rate"/><Curve data={ev.curves.pr} title="Precision–recall" subtitle={`Baseline prevalence ${pct(ev.positive/ev.n)}`} type="pr" baseline={ev.positive/ev.n}/><Curve data={ev.curves.calibration} title="Calibration curve" subtitle="Observed positive rate · six quantile bins" type="calibration"/></div>
@@ -44,6 +56,7 @@ export default function EvidenceLab({evidence,registry,target,onTarget}:{evidenc
       <details className="evidence-details"><summary>Inspect all 10 outer folds and selected model families</summary><table><thead><tr><th>Fold</th><th>Train / test</th><th>Selected model</th><th>AUC</th><th>Brier</th></tr></thead><tbody>{ev.folds.map(f=><tr key={f.fold}><td>{f.fold+1}</td><td>{f.train_n} / {f.test_n}</td><td>{f.selected_family}</td><td>{score(f.metrics.roc_auc)}</td><td>{score(f.metrics.brier)}</td></tr>)}</tbody></table></details>
     </>}
     {tab==='Interpretability'&&<div className="lab-two-columns"><section><h3>Global feature contributions</h3><p className="muted">Mean absolute probability SHAP on held-out patients.</p><div className="global-bars">{ev.global_shap.slice(0,15).map(f=><div key={f.feature}><span>{f.label}</span><div><i style={{width:`${f.value/ev.global_shap[0].value*100}%`}}/></div><b>{(f.value*100).toFixed(2)}<small> pp</small></b></div>)}</div></section><section><h3>Explanation consistency</h3><div className="stability-number">{score(ev.shap_stability.mean_spearman)}<small>mean pairwise Spearman rank correlation</small></div><p>Compare global feature ranks across {ev.shap_stability.folds} independently selected outer-fold models. Higher values mean more stable rankings; this is descriptive and does not establish clinical validity.</p><dl className="protocol-list"><dt>Held-out explanations</dt><dd>{ev.shap_stability.heldout_explanations} (6 per fold)</dd><dt>Background</dt><dd>16 patients from each training fold</dd><dt>Output explained</dt><dd>Exact sigmoid-calibrated probability</dd><dt>Algorithm</dt><dd>Permutation SHAP, approximate marginal attributions</dd></dl><div className="lab-note"><InfoMark/><p>Correlated inputs can share credit. Attributions describe model behavior and do not identify causes or clinical interventions.</p></div><p className="fine-print">{evidence.protocol.shap}</p></section></div>}
+    {tab==='Interpretability'&&<ReliabilityDetails evidence={evidence.reliability} target={target} mode="explanation"/>}
     {tab==='Robustness'&&<>
       <div className="lab-two-columns"><section><h3>Subgroup checks</h3><p className="muted">Descriptive internal checks; small groups, no fairness certification.</p><table><thead><tr><th>Subgroup</th><th>n / positive</th><th>AUC</th><th>Recall</th><th>Brier</th></tr></thead><tbody>{ev.subgroups.map(g=><tr key={g.group+g.label}><td>{g.group} · {g.label==='Fmale'?'Female':g.label}</td><td>{g.n} / {g.positive}</td><td>{score(g.metrics.roc_auc)}</td><td>{score(g.metrics.recall)}</td><td>{score(g.metrics.brier)}</td></tr>)}</tbody></table></section><section><h3>Feature-group ablation</h3><p className="muted">Fixed logistic baseline; same 5-fold split, no model selection.</p><table><thead><tr><th>Removed group</th><th>AUC</th><th>Brier</th></tr></thead><tbody>{ev.ablations.map(a=><tr key={a.removed}><td>{a.removed}</td><td>{score(a.metrics.roc_auc)}</td><td>{score(a.metrics.brier)}</td></tr>)}</tbody></table><p className="fine-print">Ablations measure predictive information under this baseline. They do not measure clinical necessity.</p></section></div>
       <section className="failure-section"><h3>Where the model failed</h3><p className="muted">Eight largest absolute held-out errors; selected to expose weaknesses.</p><div className="table-scroll"><table><thead><tr><th>Cohort row</th><th>Age</th><th>Sex</th><th>Observed</th><th>Estimated probability</th><th>Absolute error</th></tr></thead><tbody>{ev.failures.map(f=><tr key={f.row}><td>{String(f.row+1).padStart(3,'0')}</td><td>{f.age}</td><td>{f.sex==='Fmale'?'Female':f.sex}</td><td>{f.truth?'Positive':'Negative'}</td><td>{pct(f.probability)}</td><td>{score(Math.abs(f.truth-f.probability))}</td></tr>)}</tbody></table></div></section>
@@ -55,6 +68,8 @@ export default function EvidenceLab({evidence,registry,target,onTarget}:{evidenc
       <section className="registry-section"><h3><Fingerprint size={18}/> Reproducible model registry</h3><p className="muted">{registry.version} · seed {registry.seed} · artifacts verified on API startup</p><div className="table-scroll"><table><thead><tr><th>Target</th><th>Deployed family</th><th>Parameters</th><th>Artifact SHA-256</th></tr></thead><tbody>{TARGETS.map(t=><tr key={t}><td>{t}</td><td>{registry.models[t].family}</td><td><code>{JSON.stringify(registry.models[t].params)}</code></td><td><code className="hash-text">{registry.models[t].sha256}</code></td></tr>)}</tbody></table></div><p className="fine-print">Dataset SHA-256: <code className="hash-text">{registry.dataset_sha256}</code></p><div className="library-list">{Object.entries(registry.libraries).map(([n,v])=><span key={n}>{n} <b>{v}</b></span>)}</div></section>
       <section className="anatomy-provenance"><h3>Real reference anatomy, honest mapping</h3><p>BodyParts3D 4.0, © DBCLS, CC BY 4.0. 63 real meshes, 37,444 triangles, 1.07 MB. The three coronary territories are mapped by source structure name and ID. No point, stenosis geometry or RWMA lesion is generated.</p><a className="source-link" href="/anatomy/manifest.json" target="_blank">Inspect exact source revision & mesh mapping <ExternalLink size={13}/></a></section>
     </>}
+      </div>
+    </div>
   </main>;
 }
 function InfoMark(){return <span className="info-mark">i</span>;}

@@ -3,7 +3,7 @@ import { Suspense, useEffect, useMemo, useRef, useState, Component, type ReactNo
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { BufferAttribute, BufferGeometry, Color, DoubleSide, Vector3 } from 'three';
-import { RotateCcw, Play, Pause, Layers, Focus, Maximize2, Minimize2, MousePointer2, BookOpen, ChevronDown } from 'lucide-react';
+import { RotateCcw, Play, Pause, Layers, Focus, Maximize2, Minimize2, BookOpen, ChevronDown } from 'lucide-react';
 import { NAMES, Prediction, riskColor, Target, TARGETS, VESSELS, Vessel } from '@/lib/types';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { ARTERY_GUIDE } from '@/lib/coronary-anatomy';
@@ -38,7 +38,7 @@ function AnatomyMesh({item,prediction,selected,xray,isolate,onSelect}:{item:Load
 
 const CAMERA_DISTANCE=8.4;
 const VIEW_DIRECTIONS:Record<Target,[number,number,number]>={CAD:[0,.05,1],LAD:[.45,.1,1],LCX:[1,.15,-.8],RCA:[-1,.12,.8]};
-function CameraGuide({selected,focusVersion,spin,onManual}:{selected:Target;focusVersion:number;spin:boolean;onManual:()=>void}){
+function CameraGuide({selected,focusVersion,spin}:{selected:Target;focusVersion:number;spin:boolean}){
   const {camera,invalidate}=useThree();
   const controls=useRef<OrbitControlsImpl>(null);
   const destination=useRef<{position:Vector3;target:Vector3}|null>(null);
@@ -63,7 +63,7 @@ function CameraGuide({selected,focusVersion,spin,onManual}:{selected:Target;focu
     if(camera.position.distanceTo(position)<.005){camera.position.copy(position);controls.current.target.copy(target);controls.current.update();destination.current=null;}
     else invalidate();
   });
-  return <OrbitControls ref={controls} makeDefault enablePan autoRotate={spin} autoRotateSpeed={.6} minDistance={3.6} maxDistance={14} target={[0,.1,0]} enableDamping dampingFactor={.08} onStart={()=>{destination.current=null;onManual();}}/>;
+  return <OrbitControls ref={controls} makeDefault enablePan autoRotate={spin} autoRotateSpeed={.6} minDistance={3.6} maxDistance={14} target={[0,.1,0]} enableDamping dampingFactor={.08} onStart={()=>{destination.current=null;}}/>;
 }
 
 function moveLabel(el:HTMLButtonElement,x:number,y:number,visible:boolean){
@@ -118,7 +118,6 @@ export default function HeartViewer({prediction,target,focusVersion,dirty,initia
   const [isolate,setIsolate]=useState(false);
   const [reset,setReset]=useState(0);
   const [full,setFull]=useState(false);
-  const [manualVersion,setManualVersion]=useState(0);
   const [resetVersion,setResetVersion]=useState(0);
   const labels=useRef<Partial<Record<Vessel,HTMLButtonElement|null>>>({});
   const connectors=useRef<Partial<Record<Vessel,SVGGElement|null>>>({});
@@ -145,7 +144,6 @@ export default function HeartViewer({prediction,target,focusVersion,dirty,initia
   const labelParts=useMemo(()=>loaded.filter(x=>['FJ2631','FJ2649','FJ2723'].includes(x.part.id)),[loaded]);
   const choose=(v:Target)=>{setSpin(false);onSelect(v);};
   const rotating=spin&&spinVersion===focusVersion;
-  const guided=focusVersion>Math.max(manualVersion,resetVersion)&&!rotating;
   const selected=target==='CAD'?null:target;
   const activeRisk=prediction?.targets[target];
   const guide=selected?ARTERY_GUIDE[selected]:null;
@@ -172,14 +170,13 @@ export default function HeartViewer({prediction,target,focusVersion,dirty,initia
         <Suspense fallback={null}>
           <group position={[0,-.25,0]}>{loaded.map(item=><AnatomyMesh key={item.part.id} {...{item,prediction,selected,xray,isolate}} onSelect={choose}/>)}</group>
           <VesselAnchors items={labelParts} labels={labels} connectors={connectors}/>
-          <CameraGuide selected={target} focusVersion={focusVersion>resetVersion?focusVersion:0} spin={rotating} onManual={()=>setManualVersion(focusVersion)}/>
+          <CameraGuide selected={target} focusVersion={focusVersion>resetVersion?focusVersion:0} spin={rotating}/>
         </Suspense>
       </Canvas></CanvasBoundary>}
       <svg className="vessel-connectors" aria-hidden="true">{VESSELS.map(v=><g key={v} ref={el=>{connectors.current[v]=el;}} className={selected===v?'active':''}><line/><circle r="3"/></g>)}</svg>
       {labelParts.map(({part})=><button key={part.id} ref={el=>{labels.current[part.target!]=el;}} className={`artery-label projected-label ${selected===part.target?'selected':''}`} onClick={()=>choose(part.target!)} aria-pressed={selected===part.target} aria-label={`Select ${part.target} in 3D`}><i style={{background:riskColor(prediction?.targets[part.target!].probability)}}/>{part.target}</button>)}
-      <div className="view-caption">{guided?(target==='CAD'?'Coronary overview':`${selected} focused view`):resetVersion>=focusVersion&&!rotating&&manualVersion<focusVersion?'Front view':'Drag to explore'}</div>
+      <div className="view-caption">Drag to rotate · Scroll to zoom · Click a vessel</div>
     </div>
-    <div className="viewer-hint"><MousePointer2 size={13}/> Drag to rotate · Scroll to zoom · Click a vessel</div>
     <div className="viewer-controls"><button onClick={()=>{setSpin(!rotating);setSpinVersion(focusVersion);}} aria-pressed={rotating}>{rotating?<Pause size={15}/>:<Play size={15}/>}<span>{rotating?'Pause':'Orbit'}</span></button><button onClick={()=>setXray(!xray)} aria-pressed={xray}><Layers size={15}/><span>X-ray</span></button><button onClick={()=>setIsolate(!isolate)} aria-pressed={isolate}><Focus size={15}/><span>Vessels only</span></button><button onClick={()=>{setReset(v=>v+1);setSpin(false);setResetVersion(focusVersion);}}><RotateCcw size={15}/><span>Reset</span></button></div>
     <div className="color-key" aria-label="Probability display bands, not clinical risk categories"><span>Probability</span><span><i style={{background:riskColor(0)}}/>&lt;30%</span><span><i style={{background:riskColor(.3)}}/>30–&lt;60%</span><span><i style={{background:riskColor(.6)}}/>≥60%</span></div>
     <p className="anatomy-note">Reference anatomy · Color shows probability, not blockage severity</p>

@@ -18,7 +18,7 @@ python scripts/start.py --setup
 python scripts/start.py
 ```
 
-Open **http://127.0.0.1:3000**. Choose the default **Mixed vessel estimates** case and click **Predict coronary risk**. Rotate/zoom the heart, select each vessel, inspect its explanation, then open **Evidence Lab**. **Ctrl+C** stops both services.
+Open **http://127.0.0.1:3000**. Use the first case (**54-year-old man, smoker with chest pain**) and click **Predict coronary risk**. Rotate/zoom the heart, select each vessel, inspect its explanation and analytics, then open **Evidence Lab**. **Ctrl+C** stops both services.
 
 Development: `python scripts/start.py --dev`. Custom ports: `python scripts/start.py --port 3001 --api-port 8001`. Docker alternative: `docker compose up --build` (configuration supplied; Docker is not installed on the build host, so container execution remains unverified).
 
@@ -68,10 +68,13 @@ Run from the repository root with the pinned Python environment:
 python -m ml.train       # Refit and re-evaluate all four targets from the original XLSX
 python -m ml.refine_vessels # One bounded vessel/threshold experiment, paired to the new frozen artifacts
 python -m ml.evaluate    # Verify frozen OOF metrics and source/model hashes; export metrics CSV
+python -m ml.reliability # Audit local SHAP stability and calibration of frozen predictions; no fitting
 python -m pytest        # Scientific validity, leakage, prediction and API checks
 ```
 
-Training is deterministic under the pinned environment and seed 2026. It uses six predeclared candidate configurations and selection score `inner ROC-AUC - 0.25 × Brier`. It includes raw/sigmoid/isotonic sensitivity analysis and fixed-logistic feature-group ablations. Local checkpoint artifacts allow an interrupted training run to resume; final submission excludes those intermediates. Delete local `*.checkpoint.joblib` files before a completely fresh rerun after changing modeling code. Restart the API after retraining. Hash values may differ across library/serialization versions; exact shipped files are verified at API startup.
+Training is deterministic under the pinned environment and seed 2026. It uses six predeclared candidate configurations and selection score `inner ROC-AUC - 0.25 × Brier`. It includes raw/sigmoid/isotonic sensitivity analysis and fixed-logistic feature-group ablations. Checkpoints resume only when data, target, seed, schema, repeats, training-source hashes, Python and dependency versions match. Legacy or mismatched checkpoints restart automatically; writes use temporary files followed by replacement. Final submission excludes these intermediates. Restart the API after retraining. API startup checks `integrity.json` against all model bundles, OOD, registry, evidence and schema before deserializing any estimator. Training writes this manifest automatically; `python -m ml.integrity` is an explicit packaging operation for already-trusted files, not a repair for unexplained mismatches.
+
+The additional [reliability audit](docs/RELIABILITY_AUDIT.md) preserves the frozen model weights and headline evidence. It adds calibration group counts, descriptive Wilson intervals, Brier intervals and a training-only prevalence baseline, separate-repeat metrics, and local SHAP seed/computation/background sensitivity on four predefined held-out profiles. Evidence Lab exposes the details on demand. Audit results are loaded only when source and artifact fingerprints match. CI runs desktop Chromium integration tests as well as scientific tests and frontend checks.
 
 ```powershell
 cd web
@@ -82,7 +85,7 @@ npx playwright install chromium
 npx playwright test
 ```
 
-Start both services before the browser tests. To test a different frontend port set `DEMO_URL`. The two essential browser journeys exercise real backend predictions, 3D selection/X-ray, target explanation routing, evidence, edits, outcomes, exports and mobile overflow using software-rendered WebGL. Screenshots are generated in `demo/screenshots/`. Tests protect validity and demo reliability; there is no coverage quota or large test framework.
+Start both services before local browser tests. To test a different frontend port set `DEMO_URL`. CI starts its own frontend and backend. Desktop Chromium tests exercise real predictions, 3D selection/X-ray, synchronized target routing, evidence, calibration counts, input origins, edits and exports using software-rendered WebGL. Screenshots are generated in `demo/screenshots/`. The project targets desktop browsers only.
 
 ## Model API
 
@@ -113,7 +116,7 @@ The service rejects missing, unknown, target-bearing, nonfinite and unsupported 
 
 Before unpickling, startup checks scikit-learn against the artifact registry. An incompatible installation exits with the required/installed versions and `python scripts/start.py --setup`, instead of reaching an incompatible estimator's prediction traceback. For manual tests, use the pinned environment (on Windows: `.venv\Scripts\python -m pytest`).
 
-Held-out demo rows are excluded from displayed models and explanation backgrounds. Patient edits retain the excluded-row models and become **held-out sensitivity**; recorded outcomes are hidden. New profiles use full-cohort fitted models. UI defaults are cohort medians/modes and must be reviewed. Refitted-model ranges and OOD distance are descriptive heuristics, **not clinical confidence intervals**.
+Held-out demo rows are excluded from displayed models and explanation backgrounds. Patient edits retain the excluded-row models and become **held-out sensitivity**; recorded outcomes are hidden. New profiles use full-cohort fitted models. UI defaults are cohort medians/modes and must be reviewed. The input summary counts cohort-record, cohort-default, user-entered, imported and calculated values; field hover identifies the source, and case exports include `input_sources`. These are application provenance labels, not verification that a value was clinically measured. Refitted-model ranges and OOD distance are descriptive heuristics, **not clinical confidence intervals**.
 
 ## Submission materials
 

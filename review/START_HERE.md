@@ -1,6 +1,6 @@
 # Track A 審查包：先看這三件事
 
-Final audit: [strict rubric review](../docs/FINAL_AUDIT.md), [completed results and fixes](../docs/FINAL_AUDIT_RESULTS.md), [vessel literature comparison](../docs/MODEL_OPTIMIZATION_RESEARCH.md), and [English Devpost copy](../docs/DEVPOST_COPY.md). The last declared model search did not justify replacing the original models. All 19 scientific/API checks and both browser journeys pass; final video/entry publication remain outstanding.
+Current snapshot: 2026-10-09. See [reliability evidence](../docs/RELIABILITY_AUDIT.md), [model investigation](../docs/FINAL_AUDIT_RESULTS.md), and [English Devpost copy](../docs/DEVPOST_COPY.md). Current screenshots, report and ZIP include the reliability changes. Exact build/test and extracted-package outcomes are recorded in `BUILD_VALIDATION.json`. Final video/entry publication remain outstanding.
 
 1. 開 `index.html`：先看實際主畫面、10 張截圖、四模型的真實結果，以及主要方法／限制。可離線開啟。
 2. 看 `COMPLETION_SUMMARY.md`：已完成、未完成、已知弱點、run／test／build status，以及 30%／25%／20%／15%／10% 審查對照。
@@ -13,6 +13,7 @@ Final audit: [strict rubric review](../docs/FINAL_AUDIT.md), [completed results 
 - **production `.next` build 已保留**；只排除 `.next/cache`／`.next/dev` 等可重建 cache。
 - 原始 README、six-page report、demo script、docs、licenses 與 supplied Track A specification 均保留。
 - 本文件、completion summary、完整結果表、CSV／JSON，以及 10 張實際截圖位於 `review/`。
+- `../experiments/reliability/results.json` 包含 local SHAP 敏感度及校準證據；`../ml/artifacts/integrity.json` 核對完整推論檔案組。
 - `FILE_MANIFEST.json` 可核對 package 中每個檔案的 byte size 與 SHA-256。
 
 只排除可重裝 dependencies（`.venv`、`node_modules`）、cache／temporary research downloads、測試暫存、VCS metadata、env／log files，以及本次輸出的 ZIP，避免重複打包或夾帶本機設定。沒有刪掉 source、models、3D assets、lockfiles 或 build/run configuration。這是可建置的完整 repo snapshot，非只剩 screenshots 的簡化版。

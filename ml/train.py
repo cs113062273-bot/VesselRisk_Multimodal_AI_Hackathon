@@ -16,6 +16,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.neighbors import NearestNeighbors
 from ml.schema import ROOT, ARTIFACTS, DATA_PATH, SEED, TARGETS, load_data, make_schema, encode_frame
 from ml.modeling import inner_select, calibrated, explain, candidates
+from ml.reproducibility import checkpoint_protocol, checkpoint_matches, fingerprint
+from ml.integrity import write_manifest
 
 
 def json_write(path, value):
@@ -56,13 +58,16 @@ def train(repeats=2):
         raw_oof,iso_oof=np.zeros_like(oof),np.zeros_like(oof)
         shap_importance=[]
         checkpoint=ARTIFACTS/f'{target}.checkpoint.joblib'
+        protocol = checkpoint_protocol(source_hash, repeats, target, schema)
         splits=list(outer.split(X,y))
         completed=0
         if checkpoint.exists():
             saved=joblib.load(checkpoint)
-            if saved['source_hash']==source_hash and saved['repeats']==repeats:
+            if checkpoint_matches(saved, protocol):
                 folds,fold_records,oof,alternative_oof,raw_oof,iso_oof,shap_importance=[saved[k] for k in ['folds','fold_records','oof','alternative_oof','raw_oof','iso_oof','shap_importance']]
                 completed=len(folds); print(f'  Resuming {completed} completed outer folds',flush=True)
+            else:
+                print('  Checkpoint protocol changed or predates fingerprinting; starting fresh.', flush=True)
         for fold,(train_idx,test_idx) in enumerate(splits):
             if fold<completed: continue
             tx,vx,ty=X.iloc[train_idx],X.iloc[test_idx],y[train_idx]
@@ -83,7 +88,9 @@ def train(repeats=2):
             fm=metrics(y[test_idx],p)
             fold_records.append({'fold':fold,'repeat':fold//5,'train_n':len(train_idx),'test_n':len(test_idx),'train_indices':train_idx.tolist(),'test_indices':test_idx.tolist(),'selected_family':name,'params':choices[name][2],'metrics':fm,'inner_trials':inner_scores})
             folds.append({'model':selected,'family':name,'alternatives':fitted,'background':bg,'train_indices':train_idx,'test_indices':test_idx})
-            joblib.dump({'source_hash':source_hash,'repeats':repeats,'folds':folds,'fold_records':fold_records,'oof':oof,'alternative_oof':alternative_oof,'raw_oof':raw_oof,'iso_oof':iso_oof,'shap_importance':shap_importance},checkpoint,compress=3)
+            checkpoint_temp = checkpoint.with_suffix('.joblib.tmp')
+            joblib.dump({'protocol':protocol,'protocol_sha256':fingerprint(protocol),'folds':folds,'fold_records':fold_records,'oof':oof,'alternative_oof':alternative_oof,'raw_oof':raw_oof,'iso_oof':iso_oof,'shap_importance':shap_importance},checkpoint_temp,compress=3)
+            checkpoint_temp.replace(checkpoint)
             print(f'  fold {fold+1}/{5*repeats}: {name}, AUC {fm["roc_auc"]:.3f}, Brier {fm["brier"]:.3f}',flush=True)
         mean_p=oof.mean(axis=0); pooled=metrics(y,mean_p)
         dispersion={m:{'mean':float(np.mean([f['metrics'][m] for f in fold_records])),'sd':float(np.std([f['metrics'][m] for f in fold_records],ddof=1))} for m in ['accuracy','precision','recall','f1','roc_auc','pr_auc','brier']}
@@ -116,6 +123,7 @@ def train(repeats=2):
     joblib.dump({'reference':z,'mean':np.mean(encoded,axis=0),'scale':scale,'threshold':float(np.quantile(distance,.95))},ARTIFACTS/'ood.joblib',compress=3)
     json_write(ARTIFACTS/'evidence.json',{'targets':records,'protocol':{'outer':f'5 folds × {repeats} repeats, stratified','inner':'3-fold stratified search, 6 predeclared candidates','calibration':'Sigmoid, 3-fold out-of-fold calibration inside each outer training partition; ensemble=False','selection':'Inner ROC-AUC - 0.25 × Brier; select parameters per family, then family. No outer labels used.','threshold':.5,'seed':SEED,'ci':'95% patient-stratified bootstrap (1,000 resamples) of repeat-averaged OOF probabilities; conditional on fitted folds, not external validation','pooled':'Each patient occurs once after averaging their held-out predictions across repeats. Fold SD is descriptive; folds overlap.','isotonic':'Sensitivity comparison only; not selected on outer test data. Sigmoid predeclared for the small cohort.','shap':'Permutation SHAP of exact calibrated probability, 16 training-background patients, 6 held-out patients per outer fold; approximate correlated-feature attributions.','limitations':['Single 303-patient referral cohort; no external validation','Independent targets may be inconsistent; CAD is not forced to vessel union','Bootstrap intervals omit retraining and selection uncertainty','No validated clinical decision thresholds','Vessel predictions may be substantially weaker than overall CAD']},'dataset':{'name':'UCI Extension of Z-Alizadeh Sani','n':303,'columns':59,'eligible_inputs':55,'missing':0,'duplicates':0,'sha256':source_hash,'source':'https://archive.ics.uci.edu/dataset/411/extention+of+z+alizadeh+sani+dataset','doi':'10.24432/C5461K','license':'CC BY 4.0','empty_sheet':'Sheet1 has headers only; ignored'},'leakage':{'excluded':list(TARGETS.values()),'status':'PASS','input_count':55,'constant_features':[f['name'] for f in schema if f['constant']],'label_union_disagreements':int(np.sum(ys['CAD']!=((ys['LAD']+ys['LCX']+ys['RCA'])>0))),'audit_experiment':{'description':'Deliberately invalid identity predictor uses each target as its own input: AUC=1 by construction. Guard rejects it. No invalid model is trained or deployed.','invalid_identity_auc':{t:float(roc_auc_score(y,y)) for t,y in ys.items()}}},'runtime_seconds':float(time.perf_counter()-start)})
     json_write(ARTIFACTS/'registry.json',{'version':'vesselrisk-1.0','created_utc':datetime.now(timezone.utc).isoformat(),'dataset_sha256':source_hash,'seed':SEED,'models':registry,'libraries':{n:importlib.metadata.version(n) for n in ['numpy','pandas','scikit-learn','xgboost','shap','joblib']}})
+    write_manifest()
     print(f'Finished in {time.perf_counter()-start:.1f}s',flush=True)
 
 

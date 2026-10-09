@@ -12,13 +12,16 @@ Repository deliverables are implemented and locally verified. The final account-
 - [x] Evidence Lab with validation, robustness, interpretability, data and provenance.
 - [x] Visible decision-support/education disclaimer, no lesion localization or treatment effect claims.
 - [x] One-command local startup, production build, lock file, Docker packaging and minimal CI.
-- [x] Critical scientific/API tests and desktop/mobile demo checks.
+- [x] Scientific/API tests and desktop Chromium integration checks; desktop-only project.
 - [x] README, data/model card, architecture source, asset/data licenses and AI assistance disclosure.
 - [x] Six-page technical report and five-minute demo script with actual measured values.
 - [x] Screenshots generated from real production predictions and software-rendered WebGL.
 - [x] Final strict audit and primary-source vessel literature comparison; one bounded elastic-net/histogram/CatBoost experiment logged, independently verified and not promoted.
 - [x] Workbook/artifact pairing, exact exported model member, honest reset-view label and matching probability-band legend.
 - [x] Timed first 20 seconds and English Devpost copy prepared; current report/screenshots/review package refreshed.
+- [x] Checkpoint protocol fingerprints, complete inference-file integrity manifest and input-origin exports.
+- [x] Frozen calibration counts/intervals/baseline and four-profile local SHAP sensitivity audit.
+- [x] Reliability files required by the packaging script; archive CRC and every manifest hash checked.
 - [ ] Submitter review: authors/team name, narrative and final visual/text refinement.
 - [ ] Record a 3–10 minute demo, upload to YouTube and verify judge access.
 - [ ] Add final demo/repository links to the competition entry and submit.

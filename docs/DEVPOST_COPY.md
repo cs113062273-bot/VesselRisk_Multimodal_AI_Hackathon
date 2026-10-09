@@ -20,7 +20,7 @@ Internal repeat-averaged nested OOF ROC-AUC is 0.925 for CAD, 0.839 for LAD, 0.7
 
 ## What makes the work inspectable
 
-Every local explanation reconstructs the displayed calibrated probability. Exports identify the exact estimator within its verified model bundle. Held-out demonstration models exclude the displayed patient. Source labels, including one contradictory record, remain unchanged. Split indices, model weights, source hashes, reproducible commands, licensing and failure examples ship with the application.
+Every local explanation reconstructs the displayed calibrated probability. A frozen-model audit quantifies local SHAP sensitivity to seed, computation and training background on four predefined held-out profiles; it does not claim universal explanation stability. Calibration evidence includes group counts, descriptive intervals, a training-prevalence baseline and separate-repeat performance. Exports identify the exact estimator and each input's origin. Checkpoints bind to the training protocol, and the API verifies models, OOD and evidence before deserialization. Held-out demonstration models exclude the displayed patient. Source labels, including one contradictory record, remain unchanged. Split indices, model weights, reproducible commands, licensing and failure examples ship with the application.
 
 ## Limits and next steps
 

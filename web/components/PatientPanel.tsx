@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { ArrowRight, ChevronDown, ClipboardList, RotateCcw, Search, Upload } from 'lucide-react';
 import { DemoCase, Feature, Features } from '@/lib/types';
 import { calculateBmi } from '@/lib/patient-profile';
+import { InputSources, SOURCE_LABELS, sourceSummary } from '@/lib/input-provenance';
 
 const GROUPS=['Demographics & history','Symptoms & examination','ECG','Laboratory & echo'];
 const BODY_FIELDS=['Age','Sex','Length','Weight','BMI'];
@@ -11,7 +12,7 @@ const INPUT_VIEWS=['Key inputs',...GROUPS];
 function groupLabel(group:string){return group==='Demographics & history'?'History':group==='Symptoms & examination'?'Symptoms':group==='Laboratory & echo'?'Labs & echo':group;}
 function display(v:number|string,name:string){return v==='Fmale'?'Female':v==='Y'?'Yes':v==='N'?'No':typeof v==='number'&&['DM','HTN','Typical Chest Pain','Q Wave','St Elevation','St Depression','Tinversion','Current Smoker','EX-Smoker','FH','Edema'].includes(name)?v===1?'Yes':'No':String(v);}
 
-export default function PatientPanel({schema,cases,features,caseId,onCase,onChange,onPredict,busy,onImport,collapsed,onToggle}:{schema:Feature[];cases:DemoCase[];features:Features;caseId:string|null;onCase:(id:string)=>void;onChange:(name:string,value:string|number)=>void;onPredict:()=>void;busy:boolean;onImport:(features:Features)=>void;collapsed:boolean;onToggle:()=>void}){
+export default function PatientPanel({schema,cases,features,caseId,onCase,onChange,onPredict,busy,onImport,collapsed,onToggle,inputSources}:{schema:Feature[];cases:DemoCase[];features:Features;caseId:string|null;onCase:(id:string)=>void;onChange:(name:string,value:string|number)=>void;onPredict:()=>void;busy:boolean;onImport:(features:Features)=>void;collapsed:boolean;onToggle:()=>void;inputSources:InputSources}){
   const [tab,setTab]=useState('Key inputs');
   const [search,setSearch]=useState('');
   const [importError,setImportError]=useState('');
@@ -42,7 +43,7 @@ export default function PatientPanel({schema,cases,features,caseId,onCase,onChan
     }}><span>{groupLabel(g)}</span><small aria-hidden="true">{schema.filter(f=>index===0?IMPORTANT.includes(f.name):f.group===g).length}</small></button>)}</div>
     <label className="search-input"><Search size={14}/><input aria-label="Search clinical inputs" placeholder="Find a measurement…" value={search} onChange={e=>setSearch(e.target.value)}/></label>
     </div>
-    <p className="patient-input-scope">{tab==='Key inputs'&&!query?'Key inputs is a shortcut across all categories. ':''}All {schema.length} inputs are used in every prediction.</p>
+    <p className="patient-input-scope">All {schema.length} inputs are used · {sourceSummary(inputSources)}{Object.values(inputSources).includes('cohort_default')?' · Review defaults before predicting.':''}</p>
     {importError&&<p role="alert" className="patient-import-error error-text">{importError}</p>}
     {query&&<div className="search-summary" role="status"><span>{visible.length} results · all input groups</span><button onClick={()=>setSearch('')}>Clear search</button></div>}
     <form onSubmit={e=>{e.preventDefault();onPredict();}} className="clinical-form">
@@ -52,7 +53,7 @@ export default function PatientPanel({schema,cases,features,caseId,onCase,onChan
         const unitId=f.unit?`input-unit-${f.name.replace(/\W/g,'-')}`:undefined;
         const description=[unitId,derived?'bmi-note':undefined].filter(Boolean).join(' ')||undefined;
         const note=derived?'Auto-calculated from height & weight':f.constant?'Constant in cohort':f.kind==='number'?`Cohort: ${f.min?.toFixed(f.integer?0:1)}–${f.max?.toFixed(f.integer?0:1)}`:f.name==='Region RWMA'?'Source category code; no spatial coordinates':'';
-        return <label key={f.name} className={`clinical-field ${f.kind==='category'?'category-field':''}`}>
+        return <label key={f.name} className={`clinical-field ${f.kind==='category'?'category-field':''}`} data-input-source={inputSources[f.name]} title={SOURCE_LABELS[inputSources[f.name]]}>
           <span>{f.label}</span>
           {query&&<span className="field-group">{f.group}</span>}
           <span className="clinical-control">

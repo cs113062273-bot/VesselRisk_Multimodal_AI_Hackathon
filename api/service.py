@@ -7,6 +7,7 @@ import pandas as pd
 from ml.schema import ARTIFACTS, DATA_PATH, ROOT, TARGETS, guard_columns, load_data, encode_frame
 from ml.modeling import explain
 from ml.compatibility import check_model_compatibility
+from ml.integrity import verify_manifest
 
 
 class ModelService:
@@ -28,6 +29,7 @@ class ModelService:
                                           'retained_research_threshold', 'chosen_policy', 'final_research_threshold']}
                     for t, e in refinement['targets'].items()}}
         self.schema = json.loads((ROOT/'data/data_dictionary/features.json').read_text(encoding='utf-8'))
+        verify_manifest(ROOT, ARTIFACTS)
         self.bundles = {}
         for target, m in self.registry['models'].items():
             path = ARTIFACTS/m['file']
@@ -35,6 +37,10 @@ class ModelService:
                 raise RuntimeError(f'Artifact integrity check failed: {target}')
             self.bundles[target] = joblib.load(path)
         self.ood = joblib.load(ARTIFACTS/'ood.joblib')
+        from ml.reliability import load_verified
+        reliability = load_verified()
+        if reliability is not None:
+            self.evidence['reliability'] = reliability
         self.X, self.ys, _ = load_data()
         # Everyday profiles drawn intact from the source workbook. Select by
         # patient characteristics, while predictions still exclude each row.

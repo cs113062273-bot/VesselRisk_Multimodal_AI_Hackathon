@@ -1,11 +1,11 @@
-/* Put the selected artery and its explanation ahead of implementation details. */
-.workspace-header { display: grid; grid-template-columns: auto minmax(0,1fr) auto auto; gap: 24px; height: 88px; }
-.workspace-header .brand { white-space: nowrap; }
-.header-workspace-title { min-width: 0; padding-left: 24px; border-left: 1px solid var(--line); }
-.header-workspace-title h1 { font-size: 18px; line-height: 1.35; letter-spacing: -.45px; }
-.header-workspace-title p { margin-top: 4px; font-size: 11px; line-height: 1.6; color: var(--reading); max-width: 420px; }
+/* Shared desktop header keeps navigation and actions fixed between both pages. */
+.app-header.shared-header { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 24px; height: 76px; padding: 0 30px; }
+.shared-header .brand { justify-self: start; white-space: nowrap; }
+.shared-header nav { justify-self: center; height: 100%; }
+.shared-header .header-meta { justify-self: end; }
+.shared-header .header-export { width: 146px; }
 .header-export { white-space: nowrap; padding: 10px 12px; }
-.workspace { padding-top: 18px; }
+.workspace { padding-top: 10px; }
 .workspace-grid { min-height: 760px; height: auto; max-height: none; }
 .heart-viewer { isolation: isolate; }
 .heart-viewer .viewer-heading { position: relative; top: auto; left: auto; right: auto; z-index: 30; pointer-events: auto; align-items: center; gap: 12px; flex-shrink: 0; padding-bottom: 12px; }
@@ -88,13 +88,7 @@
 .viewer-full .viewer-heading { flex-wrap: wrap; }
 .viewer-full .selected-vessel-summary { margin-left: 8px; }
 
-@media (min-width: 761px) and (max-width: 1180px) {
-  .workspace-header { grid-template-columns: minmax(0,1fr) auto auto; height: auto; gap: 10px 20px; padding: 12px 22px; }
-  .workspace-header .brand { grid-column: 1; grid-row: 1; justify-self: start; }
-  .workspace-header nav { grid-column: 2; grid-row: 1 / 3; }
-  .workspace-header .header-meta { grid-column: 3; grid-row: 1 / 3; }
-  .header-workspace-title { grid-column: 1; grid-row: 2; padding-left: 0; border: 0; }
-}
+
 
 
 
@@ -149,14 +143,14 @@
 .cad-classification { display: flex; align-items: center; gap: 5px; color: var(--reading); }
 
 /* Desktop workspace: review the patient across the top, then inspect results. */
-.patient-panel.patient-profile-horizontal { height: auto; min-height: 0; margin-bottom: 22px; }
+.patient-panel.patient-profile-horizontal { height: auto; min-height: 0; margin-bottom: 12px; }
 .patient-profile-header { display: flex; align-items: center; gap: 28px; min-height: 71px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
 .profile-edit-actions { display: flex; align-items: center; gap: 28px; flex: 1; min-width: 0; }
 .profile-edit-actions[hidden] { display: none; }
 .profile-body { display: grid; grid-template-rows: 1fr; opacity: 1; visibility: visible; transition: grid-template-rows 600ms cubic-bezier(.22,1,.36,1), opacity 350ms ease, visibility 0s; }
 .profile-body-content { min-height: 0; overflow: hidden; }
 .is-collapsed .profile-body { grid-template-rows: 0fr; opacity: 0; visibility: hidden; transition: grid-template-rows 600ms cubic-bezier(.22,1,.36,1), opacity 350ms ease, visibility 0s 600ms; }
-.patient-profile-horizontal.is-collapsed .patient-profile-header { border-bottom: 0; }
+.patient-profile-horizontal.is-collapsed .patient-profile-header { min-height: 50px; padding: 8px 24px; border-bottom: 0; }
 .profile-summary { display: flex; align-items: center; gap: 20px; flex: 1; font-size: 12px; color: var(--reading); }
 .profile-summary strong { color: var(--navy); font-weight: 600; }
 .profile-toggle { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 8px 10px; border-radius: 5px; color: #176b65; font-size: 12px; font-weight: 600; }

@@ -20,3 +20,12 @@ jobs:
         working-directory: web
       - run: npm run typecheck && npm run lint && npm run build
         working-directory: web
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+      - run: npx playwright test workspace-analytics.spec.ts reliability.spec.ts visual-interaction.spec.ts
+        working-directory: web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: desktop-browser-failures
+          path: web/test-results/

@@ -1,6 +1,7 @@
 """Generate the official max-six-page report from measured evidence and screenshots."""
 import json
 import hashlib
+import sys
 from pathlib import Path
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor, Color
@@ -9,6 +10,8 @@ from reportlab.platypus import Paragraph, Table, TableStyle
 from reportlab.lib.styles import ParagraphStyle
 
 ROOT=Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 OUT=ROOT/'report/VesselRisk-Track-A.pdf'
 W,H=595.28,841.89
 M=43
@@ -137,11 +140,15 @@ def threshold_chart(r, refinement):
 
 
 def build():
+    from ml.reliability import load_verified
+    reliability = load_verified()
+    if reliability is None:
+        raise RuntimeError('Run python -m ml.reliability before building the report')
     evidence=json.loads((ROOT/'ml/artifacts/evidence.json').read_text(encoding='utf-8'))
     registry=json.loads((ROOT/'ml/artifacts/registry.json').read_text(encoding='utf-8'))
     targets=evidence['targets'];r=Report()
     r.begin('01 / Product & objective','Coronary risk, made visible.','Four calibrated clinical predictions, independently mapped to real coronary anatomy and explained by patient-level evidence.')
-    r.par('VesselRisk connects <b>structured patient inputs → four trained classifiers → calibrated probabilities → interpretable 3D coronary anatomy</b>. The first screen pairs the patient profile, heart and target-specific explanation. A separate Evidence Lab exposes validation, calibration, failures, provenance and model hashes.',space=15)
+    r.par('VesselRisk connects <b>structured patient inputs → four trained classifiers → calibrated probabilities → interpretable 3D coronary anatomy</b>. A horizontal patient profile sits above the heart, explanation and risk analytics. Evidence Lab exposes validation, calibration, failures, explanation sensitivity and provenance.',space=15)
     screenshot=ROOT/'demo/screenshots/patient-workspace.png'
     if not screenshot.exists():raise RuntimeError('Run the browser demo checks to generate final screenshots first')
     r.image(screenshot,height=270)
@@ -169,13 +176,15 @@ def build():
     r.table(rows,widths=[36,112,57,57,57,57,57,76],size=7,padding=4)
     r.par('Intervals: 1,000 patient-stratified bootstrap resamples conditional on fitted folds. They omit retraining/selection uncertainty and are not external-validation intervals. Fold SD is descriptive because folds overlap. AP is average precision.',size=7.5,color=MUTED,space=12)
     series=[(t,e['curves']['roc'],color) for (t,e),color in zip(targets.items(),COLORS)]
-    chart(r.c,M,r.y-174,243,152,series,'ROC / all four targets','False positive rate','True positive rate')
+    chart(r.c,M,r.y-156,243,134,series,'ROC / all four targets','False positive rate','True positive rate')
     cal=[(t,e['curves']['calibration'],color) for (t,e),color in zip(targets.items(),COLORS)]
-    chart(r.c,M+267,r.y-174,243,152,cal,'Calibration / six quantile bins','Estimated probability','Observed positive rate')
-    r.y-=192
+    chart(r.c,M+267,r.y-156,243,134,cal,'Calibration / six quantile bins','Estimated probability','Observed positive rate')
+    r.y-=174
     for i,(t,color) in enumerate(zip(targets,COLORS)):
         r.c.setFillColor(color);r.c.circle(M+4+i*110,r.y,3,fill=1,stroke=0);r.c.setFont('Helvetica',8);r.c.drawString(M+13+i*110,r.y-3,t)
     r.y-=19
+    skills = '; '.join(f'{t} {reliability["targets"][t]["probability"]["brier_skill"]*100:.1f}%' for t in targets)
+    r.par(f'<b>Probability quality:</b> Brier error reduction versus training-fold prevalence: {skills}. Evidence Lab adds group counts, descriptive Wilson intervals, conditional Brier intervals and separate-repeat scores. Intervals exclude refitting/selection uncertainty.',size=7.5,color=MUTED,space=8)
     refinement=json.loads((ROOT/'experiments/vessel_refinement/results.json').read_text(encoding='utf-8'))
     if (refinement['baseline_evidence_sha256']!=hashlib.sha256((ROOT/'ml/artifacts/evidence.json').read_bytes()).hexdigest()
             or refinement['baseline_registry_sha256']!=hashlib.sha256((ROOT/'ml/artifacts/registry.json').read_bytes()).hexdigest()):
@@ -183,21 +192,26 @@ def build():
     r.heading('Training-selected research operating points')
     threshold_chart(r,refinement)
     r.par('Gray: fixed 0.50; purple: training-selected F1. Same models/probabilities. LCX recall .420 to .840 (119 positives); RCA .395 to .868 (114 positives). Negative counts: 184 / 189. F1 cutoffs use inner OOF from outer train only; pool mean probability-minus-cutoff per patient. AUC/Brier stay unchanged. Accuracy falls .673 to .630 / .660 to .617. Research tradeoffs, not clinical cutoffs.',size=7.5,color=MUTED,space=9)
-    r.par('Neither the earlier ExtraTrees/SVM expansion nor the final elastic-net/HistGradientBoosting/CatBoost search showed a material policy gain. Final LCX/RCA AUC: .731/.733 versus .728/.732; paired delta intervals include zero. Original models retained. Reused splits are development evidence, not independent confirmation; full trial logs: experiments/final_audit.',size=7.5,color=MUTED,space=9)
+    r.par('Bounded model expansions did not justify replacement: LCX/RCA AUC .731/.733 versus .728/.732, with paired gain intervals including zero. Reused splits are development evidence, not independent confirmation. Full trials: experiments/final_audit.',size=7.5,color=MUTED,space=5)
     r.end()
 
     r.begin('04 / Interpretability & uncertainty','Explain the actual probability.','A contribution must explain the value the user sees, not an unrelated raw model margin.')
     r.flow([['Training background','Base probability'],['55 signed effects','Feature contributions'],['Displayed estimate','Reconstructed to 1e-6']],
            'Base + all signed contributions reconstruct the displayed calibrated probability.')
     r.par('<b>Local SHAP:</b> permutation explanations use the selected calibrated classifier and training-only background. Original categorical variables remain indivisible coalitions. Two cycles, 16/20 background patients, all 55 contributions. Reconstruction to 1e-6 checks additivity, not attribution precision.')
-    r.heading('Held-out global explanation evidence')
-    r.table([['Target','Leading absolute probability contributors','Rank stability'],*[ [t,', '.join(f['label'] for f in e['global_shap'][:4]),f'{e["shap_stability"]["mean_spearman"]:.3f}'] for t,e in targets.items()]],widths=[45,390,74],size=7.5)
-    r.par('Global importance: mean absolute probability SHAP, six held-out patients x ten folds; background n=16, one cycle. Stability: mean pairwise Spearman correlation of fold rankings. Approximate, descriptive and noncausal; correlated features can share credit.',size=8,color=MUTED)
+    r.heading('Measured local explanation sensitivity')
+    local_rows = [['Target','Seed: top-5 overlap','Background: top-5 overlap','Max background change']]
+    for t in targets:
+        summaries = reliability['targets'][t]['local_shap']['summary']
+        local_rows.append([t, f'{summaries[0]["mean_top5_overlap"]*100:.0f}%', f'{summaries[2]["mean_top5_overlap"]*100:.0f}%', f'{summaries[2]["max_change_pp"]:.1f} pp'])
+    r.table(local_rows,widths=[45,145,170,149],size=7.5,padding=4)
+    r.par('Four fixed demo rows x four targets, using held-out models and training-only backgrounds. Compare seed, two vs eight cycles, and backgrounds at eight cycles with equal seed. Descriptive sensitivity, not population-wide stability.',size=8,color=MUTED,space=8)
+    r.par('Global SHAP uses six held-out patients x ten folds, background n=16 and one cycle. Fold rank correlations range .730-.775. Correlated inputs can share attribution. Full local vectors, reference variants and fingerprints: experiments/reliability/results.json.',size=7.5,color=MUTED,space=9)
     r.heading('Three complementary limits on confidence')
     r.table([['Signal','Meaning and limitation'],['Candidate disagreement','Probability spread across three families exposes sensitivity to model choice. Not a confidence interval.'],['Refitted model range','Min/max of ten outer models; demo uses two excluding that patient. Descriptive; may omit the full-cohort estimate.'],['Profile representation','Standardized mixed-feature nearest-neighbor distance, cohort leave-one-out 95th percentile + single-feature range checks. Unvalidated heuristic.']],widths=[130,379],size=8)
     r.heading('Inspect failures, not only successes')
-    r.par('Evidence Lab exposes sex/age subgroups, eight largest held-out errors per target and fixed-logistic 5-fold ECG/laboratory-echo ablations. Small samples support descriptive checks, not fairness certification. The demo includes a confident CAD miss; the source discrepancy remains visible.')
-    r.par('<b>Boundary:</b> editing inputs explores model response, not treatment effect. Independent CAD/vessel classifiers may disagree; the UI exposes this. Attribution does not establish causality or clinical validity.',size=8.5,color=MUTED)
+    r.par('Evidence Lab exposes sex/age subgroups, eight largest held-out errors per target and fixed-logistic 5-fold ECG/laboratory-echo ablations. Small samples support descriptive checks; the original conflicting source labels are retained.')
+    r.par('<b>Boundary:</b> editing inputs explores model response, not treatment effect. Independent CAD/vessel classifiers may disagree. Attribution does not establish causality or clinical validity.',size=8.5,color=MUTED)
     r.end()
 
     r.begin('05 / 3D & end-to-end integration','Real anatomy, honest mapping.','A memorable interaction with traceable structure identity, not invented lesion localization.')
@@ -206,13 +220,14 @@ def build():
     r.table([['Vessel mapping','Source geometry / identity'],['LAD','Anterior interventricular / anterior descending branches; trunk FJ2631'],['LCX','Circumflex branches of left coronary artery; FJ2649-FJ2654'],['RCA','Right coronary artery trunk and branches; trunk FJ2723']],widths=[110,399],size=8)
     r.par('<b>Asset:</b> BodyParts3D 4.0, DBCLS, CC BY 4.0; pinned human-atlas derivative. 63 meshes, 37,444 triangles, 1,071,048 bytes. Selected, recentered and uniformly scaled; source names/IDs retained. Generic adult male anatomy, not a patient image. No RWMA-to-lesion mapping or geometry deformation.')
     r.par('<b>Interaction:</b> rotate, zoom, pan, select vessel, orbit, X-ray, vessel isolation, reset and expanded view. Artery colors use model probabilities; projected labels connect to artery surface vertices. The artery guide explains typical course and supply, not patient injury. The renderer limits pixel ratio to 1.5. Software WebGL browser tests exercise the interface without a dedicated GPU; universal FPS is not claimed.')
-    r.par('<b>System path:</b> Next.js clinical form → validated FastAPI request → calibrated CAD/LAD/LCX/RCA models → SHAP/uncertainty/OOD → probability, anatomy and explanation updates. Edited inputs mark previous results and explanations stale and block stale exports. API failures preserve the previous result and explain how to retry. Height and weight remain editable; BMI is derived. Cohort defaults are explicitly marked.')
+    r.par('<b>System path:</b> Next.js clinical form → validated FastAPI request → calibrated CAD/LAD/LCX/RCA models → SHAP/uncertainty/OOD → probability, anatomy and explanation updates. Edits mark previous results stale and block exports; failures preserve results for retry. Input origins distinguish cohort records, defaults, user entries, imports and derived BMI; exports snapshot origins with exact values.')
     r.end()
 
     r.begin('06 / Reproducibility, usage & limits','Ready to run and review.','The software, model weights and evidence run locally without cloud credentials or inference APIs.')
     r.heading('Run the complete system')
     r.par('Python 3.13 and Node 24 recommended. First run: <font name="Courier">python scripts/start.py --setup</font>. Subsequent launches: <font name="Courier">python scripts/start.py</font>. Open <b>http://127.0.0.1:3000</b>. Select a held-out case → Predict → select vessels → inspect explanations → Evidence Lab. Optional Docker Compose packaging is supplied; Docker execution was not verified on this host.',size=9)
     r.table([['Reproduce / inspect','Command or artifact'],['Train and pair vessel audit','python -m ml.train (seed 2026; 5 x 2 outer folds)<br/>python -m ml.refine_vessels'],['Verify frozen OOF results','python -m ml.evaluate → experiments/metrics.csv'],['Critical validity checks','python -m pytest'],['Frontend checks','cd web; npm run typecheck; npm run lint; npm run build'],['Browser demo reliability','cd web; npx playwright install chromium; npx playwright test'],['Scientific artifacts','ml/artifacts/{CAD,LAD,LCX,RCA}.joblib; evidence.json; registry.json'],['Submission materials','README; data/model card; licenses; screenshots; five-minute demo script']],widths=[145,364],size=7.5)
+    r.par('<b>Reliability:</b> checkpoint reuse fingerprints data, code, schema, seed, repeats and Python/dependency versions. API verifies all models, OOD, evidence, registry and schema before deserialization. Desktop Chromium integration tests run in CI. Reproduce sensitivity: <font name="Courier">python -m ml.reliability</font>; details: docs/RELIABILITY_AUDIT.md.',size=8,space=9)
     r.heading('Scope and limitations')
     r.par('Small single-center referral cohort with high CAD prevalence; no external clinical validation or longitudinal outcome prediction. Independent classifiers do not produce a validated joint probability. Vessel estimates are weaker, with low recall at the default threshold. Mixed-feature OOD and refit ranges are descriptive heuristics. No diagnosis, treatment advice, stenosis severity or lesion coordinates. Human review is required before submission; the final YouTube recording/upload uses the submitter’s account.',size=8.5)
     r.heading('Sources, licenses and AI disclosure')

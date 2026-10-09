@@ -21,16 +21,19 @@ async function shot(name, description, locator = null) {
 try {
   await page.goto(process.env.DEMO_URL || 'http://127.0.0.1:3000');
   await page.getByRole('button', { name: 'Predict coronary risk', exact: true }).click();
-  await expect(page.getByText(/held-out demonstration ·/)).toBeVisible({ timeout: 90000 });
+  await expect(page.getByRole('button', { name: 'Export case', exact: true })).toBeEnabled({ timeout: 90000 });
   await expect(page.getByRole('button', { name: 'Select LAD in 3D' })).toBeVisible();
-  await expect(page.getByText(/FPS · live/)).toBeVisible({ timeout: 10000 });
+  await page.getByRole('combobox', { name: 'View prediction target' }).selectOption('LAD');
+  await page.waitForTimeout(1200);
   await shot('01-dashboard', 'Real held-out mixed-vessel case; all four predictions and LAD explanation.');
+  await page.screenshot({ path: path.join(root, 'demo/screenshots/patient-workspace.png'), fullPage: true, animations: 'disabled' });
+  await page.locator('.heart-viewer').screenshot({ path: path.join(root, 'demo/screenshots/coronary-anatomy.png'), animations: 'disabled' });
   await shot('02-lad-shap', 'LAD selected; calibrated probability, model family and local SHAP in percentage points.', page.locator('.explanation-panel'));
-  await page.getByRole('button', { name: 'Select LCX in 3D' }).click();
+  await page.getByRole('combobox', { name: 'View prediction target' }).selectOption('LCX');
   await expect(page.getByRole('heading', { name: 'Left circumflex', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'X-ray', exact: true }).click();
   await shot('03-lcx-selected-xray', 'LCX mesh selected; corresponding LCX explanation; X-ray reveals coronary anatomy.');
-  await page.getByRole('button', { name: 'Select RCA in 3D' }).click();
+  await page.getByRole('combobox', { name: 'View prediction target' }).selectOption('RCA');
   await expect(page.getByRole('heading', { name: 'Right coronary artery', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Vessels only', exact: true }).click();
   await shot('04-rca-selected-vessels', 'RCA mesh selected with vessel isolation; right panel shows RCA explanation.');
@@ -40,9 +43,11 @@ try {
   await expect(page.getByRole('button', { name: 'Exit expanded anatomy' })).toBeVisible();
   await shot('05-expanded-heart', 'Expanded real 3D coronary anatomy; 63 source structures, individually mapped territories.');
   await page.getByRole('button', { name: 'Exit expanded anatomy' }).click();
-  await page.getByRole('button', { name: 'Evidence Lab', exact: true }).click();
+  await page.getByRole('button', { name: 'Model evidence', exact: true }).click();
+  await page.getByRole('tab', { name: 'Validation', exact: true }).click();
   await page.getByRole('tab', { name: 'CAD', exact: true }).click();
   await expect(page.locator('.auc-feature')).toContainText('0.925');
+  await page.locator('summary').filter({ hasText: 'Calibration evidence' }).click();
   await shot('06-cad-metrics', 'CAD metrics, ROC, precision-recall, calibration, model comparison and confusion matrix.');
   await page.getByRole('tab', { name: 'LCX', exact: true }).click();
   await expect(page.locator('.auc-feature')).toContainText('0.728');
@@ -50,7 +55,8 @@ try {
   await shot('07-vessel-thresholds', 'LCX fixed versus training-only research operating points, false-positive tradeoff and rejected expanded policy.');
   await page.getByRole('tab', { name: 'LAD', exact: true }).click();
   await page.getByRole('tab', { name: 'Interpretability', exact: true }).click();
-  await shot('08-global-shap', 'Held-out global SHAP and explanation ranking stability.');
+  await page.locator('summary').filter({ hasText: 'Local explanation stability' }).click();
+  await shot('08-global-shap', 'Held-out global SHAP plus local seed, computation and training-background sensitivity evidence.');
   await page.getByRole('tab', { name: 'Robustness', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Where the model failed' })).toBeVisible();
   await shot('09-robustness-failures', 'Subgroups, ablations and largest held-out errors; uncertainty limits are explicit.');

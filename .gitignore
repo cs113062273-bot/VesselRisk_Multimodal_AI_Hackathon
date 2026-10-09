@@ -10,6 +10,7 @@ web/*.tsbuildinfo
 *.log
 tmp/
 ml/artifacts/*.checkpoint.joblib
+ml/artifacts/*.checkpoint.joblib.tmp
 ml/artifacts/evidence.partial.json
 .env*
 !.env.example

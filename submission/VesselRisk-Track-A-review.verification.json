@@ -1,0 +1,18 @@
+{
+  "archive_sha256": "dccbd8ed9c2ea1a86db985b064dedef3d0692aebf2b2d355bb5b0e4efef080b0",
+  "files_verified": 519,
+  "extracted_to": "C:\\Users\\chinh\\Desktop\\MultimodelAI\\tmp\\review-validation\\dccbd8ed9c2e\\VesselRisk",
+  "crc_and_manifest": "passed",
+  "scientific_api_checks": 30,
+  "frozen_metrics": "passed",
+  "desktop_browser_checks": 3,
+  "fresh_frontend_dependencies": "npm ci",
+  "environment": "Pinned existing Python environment; extracted source and fresh frontend dependencies. Not a fresh Python installation.",
+  "execution_validated_archive_sha256": "8f106a15183c5b1c8b5b00eccdc06bfb583491db232dee9c14969b16cff6c9ab",
+  "execution_extracted_to": "C:\\Users\\chinh\\Desktop\\MultimodelAI\\tmp\\review-validation\\8f106a15183c\\VesselRisk",
+  "runtime_files_identical_to_executed_archive": true,
+  "documentation_only_changes_since_execution": [
+    "README.md",
+    "review/BUILD_VALIDATION.json"
+  ]
+}

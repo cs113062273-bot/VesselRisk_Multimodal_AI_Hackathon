@@ -20,18 +20,16 @@
 .explain-section-title h3{font-size:11px}
 .explanation-content>.fine-print{font-size:8px;color:#718c9b}
 .shap-total{font-size:8px;color:#6a8999}
-.agreement-list>div{font-size:9px;color:#658393}
-.agreement-list b{font-size:9px;color:#537788}
+
 .representation strong{font-size:9px}
 .representation p{font-size:8px;color:#6f9489}
 .text-button{font-size:9px}
-.evidence-link span>span{color:#718d9b;font-size:8px}
+
 .anatomy-note{color:#87a2b3;font-size:8px}
 .anatomy-credit{color:#7a98aa;font-size:7px}
 .viewer-topline{color:#8faaba;font-size:9px}
 .viewer-hint{color:#a8bfcb;font-size:9px}
 .safety-footer p{font-size:10px;color:#58778a}
-
 
 /* Match the legend to the three probability colors actually used by the meshes. */
 .color-key>span{display:inline-flex;align-items:center;gap:4px}

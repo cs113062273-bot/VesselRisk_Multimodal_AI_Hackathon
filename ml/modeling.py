@@ -56,7 +56,7 @@ def calibrated(estimator, X, y, seed, method='sigmoid'):
     return model.fit(X, y)
 
 
-def explain(model, frame, background, schema, cycles=2):
+def explain(model, frame, background, schema, cycles=2, seed=SEED):
     """Model-agnostic permutation SHAP on the exact calibrated probability.
 
     One categorical feature is one coalition; no misleading one-hot partial categories.
@@ -66,7 +66,7 @@ def explain(model, frame, background, schema, cycles=2):
     values = encode_frame(frame, schema)
     def predict(z):
         return model.predict_proba(decode_frame(z, schema))[:, 1]
-    explainer = shap.PermutationExplainer(predict, b, seed=SEED, feature_names=[f['name'] for f in schema])
+    explainer = shap.PermutationExplainer(predict, b, seed=seed, feature_names=[f['name'] for f in schema])
     result = explainer(values, max_evals=(2 * len(schema) + 1) * cycles, batch_size=4096, silent=True)
     probabilities = model.predict_proba(frame)[:, 1]
     error = np.max(np.abs(result.base_values + result.values.sum(axis=1) - probabilities))

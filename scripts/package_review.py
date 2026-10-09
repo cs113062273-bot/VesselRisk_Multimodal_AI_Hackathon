@@ -4,10 +4,13 @@ import hashlib
 import html
 import json
 import os
+import sys
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 REVIEW = ROOT / 'review'
 OUTPUT = ROOT / 'submission'
 METRICS = ['accuracy', 'precision', 'recall', 'f1', 'roc_auc', 'pr_auc', 'brier']
@@ -19,6 +22,12 @@ def write_json(path, value):
 
 
 def make_evidence():
+    from ml.integrity import verify_manifest
+    from ml.reliability import load_verified
+    verify_manifest()
+    reliability = load_verified()
+    if reliability is None:
+        raise RuntimeError('Missing or stale reliability evidence; run python -m ml.reliability')
     evidence = json.loads((ROOT / 'ml/artifacts/evidence.json').read_text(encoding='utf-8'))
     registry = json.loads((ROOT / 'ml/artifacts/registry.json').read_text(encoding='utf-8'))
     anatomy = json.loads((ROOT / 'web/public/anatomy/manifest.json').read_text(encoding='utf-8'))
@@ -40,7 +49,7 @@ def make_evidence():
         fn, tp = e['metrics']['confusion_matrix'][1]
         row.update({'TN': tn, 'FP': fp, 'FN': fn, 'TP': tp})
         csv_rows.append(row)
-    write_json(REVIEW / 'MODEL_RESULTS.json', {'source': 'Unmodified shipped evidence.json and registry.json', 'protocol': evidence['protocol'], 'targets': results})
+    write_json(REVIEW / 'MODEL_RESULTS.json', {'source': 'Unmodified shipped evidence.json and registry.json', 'protocol': evidence['protocol'], 'targets': results, 'reliability': reliability})
     refinement=json.loads((ROOT/'experiments/vessel_refinement/results.json').read_text(encoding='utf-8'))
     assert refinement['baseline_evidence_sha256']==hashlib.sha256((ROOT/'ml/artifacts/evidence.json').read_bytes()).hexdigest()
     assert refinement['baseline_registry_sha256']==hashlib.sha256((ROOT/'ml/artifacts/registry.json').read_bytes()).hexdigest()
@@ -76,6 +85,10 @@ def make_evidence():
           [[row[k] for k in ['target', 'positive_n', 'negative_n', 'TN', 'FP', 'FN', 'TP']] for row in csv_rows])
     table('Calibration sensitivity / Brier', ['Method', *results.keys()],
           [[method, *[f'{next(v for v in e["calibration_comparison"] if v["method"] == method)["metrics"]["brier"]:.6f}' for e in results.values()]] for method in ['Raw', 'Sigmoid', 'Isotonic']])
+    table('Frozen probability-quality diagnostics', ['Target', 'Brier conditional 95% interval', 'Training-prevalence baseline', 'Relative Brier reduction'],
+          [[t, ' / '.join(f'{v:.4f}' for v in e['probability']['brier_ci']), f'{e["probability"]["training_prevalence_brier"]:.4f}', f'{e["probability"]["brier_skill"]*100:.1f}%'] for t,e in reliability['targets'].items()])
+    table('Local SHAP sensitivity: four predefined held-out profiles', ['Target', 'Changed seed: mean top-5 overlap', 'Changed background: mean top-5 overlap', 'Largest background change'],
+          [[t, f'{e["local_shap"]["summary"][0]["mean_top5_overlap"]*100:.0f}%', f'{e["local_shap"]["summary"][2]["mean_top5_overlap"]*100:.0f}%', f'{e["local_shap"]["summary"][2]["max_change_pp"]:.1f} pp'] for t,e in reliability['targets'].items()])
     table('Exploratory operating-point comparison（training-only F1；原模型保留）',['Target','Policy','Point','Accuracy','Precision','Recall','F1','AUC','FP / FN'],
           [[r['target'],r['policy'],'Exploratory training-selected F1 operating point' if r['point']=='Nested F1' else 'Fixed 0.50',*[f'{r[k]:.6f}' for k in ['accuracy','precision','recall','f1','roc_auc']],f'{r["FP"]} / {r["FN"]}'] for r in research_rows])
     methods = [
@@ -93,7 +106,9 @@ def make_evidence():
         'OOD：standardized mixed-feature nearest-neighbor distance，以 cohort leave-one-out distance 的 95th percentile 為界，加上 observed single-feature range。未經外部驗證的 heuristic。',
         'Leakage guard：ml/schema.py 的 LeakageGuard／guard_columns，會拒絕 Cath／LAD／LCX／RCA（含大小寫／常見字元變體），接在 fit／transform 與 API validation；tests/test_validity.py 有真實 guard／fold／prediction checks。',
         'SHAP：對相同 calibrated probability 做 permutation SHAP；background 只來自 training partition；55 個原始 feature coalitions，兩個 local cycles；base + contributions 重建機率至 1e-6。近似且非因果。',
-        'Demo honesty：病例按 OOF 差異挑選，不是 evaluation sample；畫面模型與 SHAP background 排除此病例。改值後仍用排除該 row 的模型，隱藏原 outcome；新 profile 使用全 cohort fitted model。',
+        'Demo honesty：目前八個案例依病人特徵選取，不是 evaluation sample；模型與 SHAP background 排除此病例。改值後仍用排除該 row 的模型；新 profile 使用全 cohort fitted model。',
+        'Reliability：四個預先固定案例、四個 target 的 local SHAP seed／computation／training-background sensitivity，量化重疊與幅度，不能概括所有病人。校準六分箱加入人數、descriptive Wilson intervals；Brier bootstrap conditional on fitted predictions。完整 protocol／vectors／fingerprints：experiments/reliability/results.json。',
+        'Integrity：checkpoint 比對 data／code／schema／seed／repeats／Python／libraries；API 載入前驗證八個 inference files，含 OOD。輸入來源逐欄追蹤並隨病例匯出；桌面 Chromium integration tests 已接入 CI。',
     ]
     counts = {t: sum(p['target'] == t for p in anatomy['parts']) for t in results if t != 'CAD'}
     anatomy_text = f'BodyParts3D 4.0 / DBCLS，CC BY 4.0；human-atlas derivative commit {anatomy["revision"]}。共 {len(anatomy["parts"])} 個真實 mesh、{anatomy["triangles"]:,} triangles、{anatomy["bytes"]:,} bytes。LAD {counts["LAD"]}、LCX {counts["LCX"]}、RCA {counts["RCA"]} 個 source mesh 各自分組，可獨立選取／上色；不是手畫線或 overlay。DOM 文字標籤只是投影到 mesh centroid。Source names／IDs、license、修改與 hash 位於 manifest 與 ATTRIBUTIONS。'
@@ -105,7 +120,7 @@ def make_evidence():
     *{box-sizing:border-box}body{margin:0;background:#f3f7f9;color:#19384b;font:15px/1.75 system-ui,"Microsoft JhengHei",sans-serif}header{background:#143345;color:#fff;padding:48px max(24px,calc((100vw - 1200px)/2))}header h1{font-size:38px;margin:8px 0}header p{color:#b5cfd9;max-width:920px}.weights{font:13px ui-monospace,monospace;color:#7ed2c4}main{max-width:1250px;margin:auto;padding:32px 24px 80px}h2{font-size:23px;margin:28px 0 12px}h3{font-size:18px}.note{border-left:4px solid #16998e;padding:16px 20px;background:#e6f3f0}.warning{border-color:#ce8b54;background:#fff3e7}a{color:#117f83}img{width:100%;display:block;border-radius:6px}figure{margin:0}figcaption{padding:12px 0;font-size:13px;color:#5d7786}section{margin:30px 0}.table-wrap{overflow-x:auto;background:white;border:1px solid #d9e5eb}table{border-collapse:collapse;width:100%;font:13px/1.5 ui-monospace,monospace}th,td{padding:12px;text-align:left;border-bottom:1px solid #e0e9ee;white-space:nowrap}th{font-family:system-ui,sans-serif;background:#edf4f6}.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:start}.links{display:flex;flex-wrap:wrap;gap:12px 24px;margin:20px 0}li{margin:9px 0}.small{font-size:13px;color:#6b8390}@media(max-width:800px){.gallery{grid-template-columns:1fr 1fr}header h1{font-size:29px}}@media(max-width:520px){.gallery{grid-template-columns:1fr}}
     </style><header><div class="weights">PREDICTION 30% / 3D 25% / INTERPRETABILITY 20% / INTEGRATION 15% / TECHNICAL 10%</div><h1>VesselRisk：Track A 審查入口</h1><p>先看實際產品，再看完整數字與方法。此頁可離線開啟；它不是自評獎項或宣稱第一名。</p></header><main>
     <div class="links"><a href="visual-polish/index.html">UI before / after</a><a href="../docs/VISUAL_POLISH.md">Visual polish review / rollback</a><a href="../README.md">完整 README / run</a><a href="COMPLETION_SUMMARY.md">Completion summary</a><a href="../docs/FINAL_AUDIT_RESULTS.md">Final audit / model investigation</a><a href="../docs/DEVPOST_COPY.md">Devpost draft</a><a href="MODEL_RESULTS.csv">完整數字 CSV</a><a href="MODEL_RESULTS.json">完整數字 JSON</a><a href="../report/VesselRisk-Track-A.pdf">六頁 report</a><a href="../demo/DEMO_SCRIPT.md">Demo script</a></div>
-    <p class="note">已完成可用的四模型 + 55 輸入 + 真實 3D + SHAP + Evidence Lab。19 scientific/API tests、2 browser journeys、typecheck、lint、production build、isolated startup 通過。ZIP 包含 production build、models、assets、lockfiles 與 build/run 設定。</p>
+    <p class="note">四模型 + 55 輸入 + 真實 3D + SHAP + Evidence Lab 已同步可靠性實驗、輸入來源與完整性驗證。測試、解壓驗證與版本範圍見 BUILD_VALIDATION.json。ZIP 包含 production build、models、assets、lockfiles 與 build/run 設定。</p>
     <h2>01 / 先看主畫面</h2><a href="screenshots/01-dashboard.png"><img src="screenshots/01-dashboard.png" alt="Actual VesselRisk dashboard"></a>
     <p class="small">實際 held-out mixed-vessel case：CAD 94.9%、LAD 90.4%、LCX 17.7%、RCA 18.6%。這是示範病例，不是平均驗證表現。點圖片看原尺寸。</p>
     <h2>02 / 產品各狀態</h2><div class="gallery">''' + photos + '''</div>
@@ -125,7 +140,7 @@ def package():
     for directory, dirs, names in os.walk(ROOT):
         dirs[:] = sorted(d for d in dirs if d not in excluded_dirs and (Path(directory) / d).relative_to(ROOT).as_posix() not in excluded_paths)
         for name in sorted(names):
-            if name.startswith('.env') or name.endswith(('.pyc', '.log', '.tsbuildinfo', '.checkpoint.joblib')) or name == 'evidence.partial.json':
+            if name.startswith('.env') or name.endswith(('.pyc', '.log', '.tsbuildinfo', '.checkpoint.joblib', '.checkpoint.joblib.tmp')) or name == 'evidence.partial.json':
                 continue
             path = Path(directory) / name
             if path == REVIEW / 'FILE_MANIFEST.json':
@@ -143,6 +158,8 @@ def package():
         names = set(zipped.namelist())
         required = ['web/package-lock.json', 'web/.next/BUILD_ID', 'web/.next/required-server-files.json', 'web/Dockerfile', 'api/main.py', 'ml/train.py', 'ml/artifacts/CAD.joblib', 'ml/artifacts/LAD.joblib', 'ml/artifacts/LCX.joblib', 'ml/artifacts/RCA.joblib', 'ml/artifacts/evidence.json', 'web/public/anatomy/heart.bin', 'README.md', 'compose.yaml', 'scripts/start.py', 'tests/test_validity.py', '.github/workflows/verify.yml', 'report/VesselRisk-Track-A.pdf', 'review/index.html', 'review/COMPLETION_SUMMARY.md']
         assert all('VesselRisk/' + p in names for p in required), 'Missing core deliverable'
+        reliability_required = ['ml/artifacts/integrity.json', 'ml/integrity.py', 'ml/reliability.py', 'ml/reproducibility.py', 'experiments/reliability/results.json', 'docs/RELIABILITY_AUDIT.md', 'tests/test_reliability.py', 'web/components/ReliabilityDetails.tsx', 'web/lib/input-provenance.ts', 'web/e2e/reliability.spec.ts', 'review/BUILD_VALIDATION.json']
+        assert all('VesselRisk/' + p in names for p in reliability_required), 'Missing reliability deliverable'
         assert sum(n.startswith('VesselRisk/review/screenshots/') and n.endswith('.png') for n in names) == 10
         for item in manifest:
             data = zipped.read('VesselRisk/' + item['path'])

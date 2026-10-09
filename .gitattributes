@@ -1,2 +1,5 @@
 # Preserve PDF byte offsets when checked out on Windows.
 *.pdf binary
+# Historical experiment fingerprints include these files' Windows line endings.
+ml/artifacts/registry.json text eol=crlf
+ml/artifacts/evidence.json text eol=crlf

@@ -46,6 +46,24 @@
 | Sigmoid | 0.094270 | 0.157328 | 0.206423 | 0.201354 |
 | Isotonic | 0.098566 | 0.160198 | 0.206498 | 0.202103 |
 
+## Frozen probability-quality diagnostics
+
+| Target | Brier conditional 95% interval | Training-prevalence baseline | Relative Brier reduction |
+|---|---|---|---|
+| CAD | 0.0735 / 0.1144 | 0.2047 | 53.9% |
+| LAD | 0.1339 / 0.1819 | 0.2429 | 35.2% |
+| LCX | 0.1896 / 0.2245 | 0.2385 | 13.5% |
+| RCA | 0.1830 / 0.2205 | 0.2347 | 14.2% |
+
+## Local SHAP sensitivity: four predefined held-out profiles
+
+| Target | Changed seed: mean top-5 overlap | Changed background: mean top-5 overlap | Largest background change |
+|---|---|---|---|
+| CAD | 85% | 75% | 10.7 pp |
+| LAD | 95% | 75% | 6.2 pp |
+| LCX | 95% | 75% | 3.9 pp |
+| RCA | 95% | 75% | 8.4 pp |
+
 ## Exploratory operating-point comparison（training-only F1；原模型保留）
 
 | Target | Policy | Point | Accuracy | Precision | Recall | F1 | AUC | FP / FN |
@@ -75,7 +93,9 @@
 - OOD：standardized mixed-feature nearest-neighbor distance，以 cohort leave-one-out distance 的 95th percentile 為界，加上 observed single-feature range。未經外部驗證的 heuristic。
 - Leakage guard：ml/schema.py 的 LeakageGuard／guard_columns，會拒絕 Cath／LAD／LCX／RCA（含大小寫／常見字元變體），接在 fit／transform 與 API validation；tests/test_validity.py 有真實 guard／fold／prediction checks。
 - SHAP：對相同 calibrated probability 做 permutation SHAP；background 只來自 training partition；55 個原始 feature coalitions，兩個 local cycles；base + contributions 重建機率至 1e-6。近似且非因果。
-- Demo honesty：病例按 OOF 差異挑選，不是 evaluation sample；畫面模型與 SHAP background 排除此病例。改值後仍用排除該 row 的模型，隱藏原 outcome；新 profile 使用全 cohort fitted model。
+- Demo honesty：目前八個案例依病人特徵選取，不是 evaluation sample；模型與 SHAP background 排除此病例。改值後仍用排除該 row 的模型；新 profile 使用全 cohort fitted model。
+- Reliability：四個預先固定案例、四個 target 的 local SHAP seed／computation／training-background sensitivity，量化重疊與幅度，不能概括所有病人。校準六分箱加入人數、descriptive Wilson intervals；Brier bootstrap conditional on fitted predictions。完整 protocol／vectors／fingerprints：experiments/reliability/results.json。
+- Integrity：checkpoint 比對 data／code／schema／seed／repeats／Python／libraries；API 載入前驗證八個 inference files，含 OOD。輸入來源逐欄追蹤並隨病例匯出；桌面 Chromium integration tests 已接入 CI。
 
 ## 3D implementation
 
