@@ -99,7 +99,7 @@ Generated deliverables: refreshed report, demo/review screenshots, review hub/ma
 
 ## Final score estimate and why not 100
 
-**Approximately 91/100 for the reviewable software/evidence package**: Prediction 24/30, 3D 24/25, Interpretability 18/20, Integration 15/15, Technical 10/10. A reasonable subjective range is 87-94; the official rubric supplies weights, not a formula mapping AUC to points. Do not treat three estimated points as an empirical result or a competition ranking.
+**Previous numerical self-rating withdrawn (2026-10-09).** The earlier 91/100 estimate, including 24/25 for 3D, over-weighted functional completeness and verification. It did not establish near-perfect clarity or interaction quality. The official rubric supplies category weights, not a deterministic point formula. Use the implementation evidence and stated limitations below; no replacement numerical score or competition ranking is claimed. The subsequent interface improvements are documented in `VISUAL_INTERACTION.md`.
 
 LCX/RCA remain only moderately discriminative; their default recall is weak. The evidence comes from 303 referral patients, not independent validation. Approximate SHAP, coarse/reference anatomy, a compact UI that needs readable recording zoom, and unvalidated uncertainty/OOD heuristics can still cost points. A better-performing rigorously evaluated rival could win. Native production and software WebGL were exercised; Docker execution remains unverified.
 

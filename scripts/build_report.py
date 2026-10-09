@@ -43,11 +43,11 @@ class Report:
     def heading(self,text):
         self.c.setFillColor(INK);self.c.setFont('Helvetica-Bold',12);self.c.drawString(M,self.y-12,text);self.y-=27
 
-    def table(self,rows,widths=None,size=8):
+    def table(self,rows,widths=None,size=8,padding=6):
         style=ParagraphStyle('table',fontName='Helvetica',fontSize=size,leading=size*1.35,textColor=INK)
         data=[[Paragraph(str(cell),style) for cell in row] for row in rows]
         t=Table(data,colWidths=widths or [((W-2*M)/len(rows[0]))]*len(rows[0]))
-        t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),ICE),('TEXTCOLOR',(0,0),(-1,0),MUTED),('LINEBELOW',(0,0),(-1,0),.6,LINE),('LINEBELOW',(0,1),(-1,-1),.4,LINE),('TOPPADDING',(0,0),(-1,-1),6),('BOTTOMPADDING',(0,0),(-1,-1),6),('LEFTPADDING',(0,0),(-1,-1),8),('VALIGN',(0,0),(-1,-1),'TOP')]))
+        t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),ICE),('TEXTCOLOR',(0,0),(-1,0),MUTED),('LINEBELOW',(0,0),(-1,0),.6,LINE),('LINEBELOW',(0,1),(-1,-1),.4,LINE),('TOPPADDING',(0,0),(-1,-1),padding),('BOTTOMPADDING',(0,0),(-1,-1),padding),('LEFTPADDING',(0,0),(-1,-1),8),('VALIGN',(0,0),(-1,-1),'TOP')]))
         tw,th=t.wrap(W-2*M,1000)
         if self.y-th<65:raise RuntimeError(f'Table overflow on page {self.page}')
         t.drawOn(self.c,M,self.y-th);self.y-=th+18
@@ -109,6 +109,33 @@ def chart(c,x,y,w,h,series,title,xlabel,ylabel,diagonal=True):
     c.drawString(left,bottom+ch+5,ylabel)
 
 
+def threshold_chart(r, refinement):
+    """Paired error counts from the same frozen models, on identical zero-based axes."""
+    rows=[]
+    for target in ['LCX','RCA']:
+        variants=refinement['targets'][target]['variants']
+        for operating,label,color in [('0.50','0.50',HexColor('#627d90')),('Nested F1','F1',HexColor('#6d60a2'))]:
+            metrics=next(v['metrics'] for v in variants if v['policy']=='Frozen baseline' and v['operating_point']==operating)
+            cm=metrics['confusion_matrix']
+            rows.append((f'{target} / {label}',cm[1][0],cm[0][1],color))
+    scale=max(20,((max(max(row[1:3]) for row in rows)+19)//20)*20)
+    height=114
+    if r.y-height<65:raise RuntimeError('Threshold chart overflow')
+    c=r.c
+    for panel,title in enumerate(['Missed positives (patients)','False positives (patients)']):
+        x=M+panel*267; left=x+66; width=149
+        c.setFillColor(INK);c.setFont('Helvetica-Bold',9);c.drawString(x,r.y-9,title)
+        for i,(label,fn,fp,color) in enumerate(rows):
+            y=r.y-29-i*18; count=fn if panel==0 else fp
+            c.setFillColor(INK);c.setFont('Helvetica',7);c.drawString(x,y,label)
+            c.setFillColor(ICE);c.rect(left,y-1,width,8,fill=1,stroke=0)
+            c.setFillColor(color);c.rect(left,y-1,width*count/scale,8,fill=1,stroke=0)
+            c.setFillColor(INK);c.drawRightString(x+241,y,str(count))
+        c.setFillColor(MUTED);c.setFont('Helvetica',6.5)
+        for tick in [0,scale/2,scale]:c.drawCentredString(left+width*tick/scale,r.y-101,f'{tick:g}')
+    r.y-=height
+
+
 def build():
     evidence=json.loads((ROOT/'ml/artifacts/evidence.json').read_text(encoding='utf-8'))
     registry=json.loads((ROOT/'ml/artifacts/registry.json').read_text(encoding='utf-8'))
@@ -139,8 +166,8 @@ def build():
     rows=[['Target','AUC [95% CI]','Acc','Prec','Recall','F1','AP','Brier ↓']]
     for t,e in targets.items():
         m=e['metrics'];rows.append([t,f'{m["roc_auc"]:.3f}<br/>[{e["auc_ci"][0]:.3f}, {e["auc_ci"][1]:.3f}]',*[f'{m[k]:.3f}' for k in ['accuracy','precision','recall','f1','pr_auc','brier']]])
-    r.table(rows,widths=[36,112,57,57,57,57,57,76],size=7)
-    r.par('Intervals: 1,000 patient-stratified bootstrap resamples conditional on fitted folds. They omit retraining/selection uncertainty and are not external-validation intervals. Fold SD is descriptive because folds overlap. AP is average precision.',size=7.5,color=MUTED,space=23)
+    r.table(rows,widths=[36,112,57,57,57,57,57,76],size=7,padding=4)
+    r.par('Intervals: 1,000 patient-stratified bootstrap resamples conditional on fitted folds. They omit retraining/selection uncertainty and are not external-validation intervals. Fold SD is descriptive because folds overlap. AP is average precision.',size=7.5,color=MUTED,space=12)
     series=[(t,e['curves']['roc'],color) for (t,e),color in zip(targets.items(),COLORS)]
     chart(r.c,M,r.y-174,243,152,series,'ROC / all four targets','False positive rate','True positive rate')
     cal=[(t,e['curves']['calibration'],color) for (t,e),color in zip(targets.items(),COLORS)]
@@ -148,18 +175,14 @@ def build():
     r.y-=192
     for i,(t,color) in enumerate(zip(targets,COLORS)):
         r.c.setFillColor(color);r.c.circle(M+4+i*110,r.y,3,fill=1,stroke=0);r.c.setFont('Helvetica',8);r.c.drawString(M+13+i*110,r.y-3,t)
-    r.y-=25
+    r.y-=19
     refinement=json.loads((ROOT/'experiments/vessel_refinement/results.json').read_text(encoding='utf-8'))
     if (refinement['baseline_evidence_sha256']!=hashlib.sha256((ROOT/'ml/artifacts/evidence.json').read_bytes()).hexdigest()
             or refinement['baseline_registry_sha256']!=hashlib.sha256((ROOT/'ml/artifacts/registry.json').read_bytes()).hexdigest()):
         raise RuntimeError('Stale research evidence: run python -m ml.refine_vessels before building the report')
     r.heading('Training-selected research operating points')
-    research_rows=[['Target','Precision','Recall','F1','FP / FN']]
-    for t in ['LCX','RCA']:
-        rm=next(v['metrics'] for v in refinement['targets'][t]['variants'] if v['policy']=='Frozen baseline' and v['operating_point']=='Nested F1')
-        research_rows.append([t,*[f'{rm[k]:.3f}' for k in ['precision','recall','f1']],f'{rm["confusion_matrix"][0][1]} / {rm["confusion_matrix"][1][0]}'])
-    r.table(research_rows,widths=[45,116,116,116,116],size=8)
-    r.par('F1-maximizing cutoffs use calibrated inner OOF from outer train only; pool mean probability-minus-cutoff per patient. AUC/Brier stay unchanged. LCX false positives rise 30 to 93; RCA 34 to 101. Accuracy falls .673 to .630 / .660 to .617. These are research tradeoffs, not clinical cutoffs.',size=7.5,color=MUTED,space=9)
+    threshold_chart(r,refinement)
+    r.par('Gray: fixed 0.50; purple: training-selected F1. Same models/probabilities. LCX recall .420 to .840 (119 positives); RCA .395 to .868 (114 positives). Negative counts: 184 / 189. F1 cutoffs use inner OOF from outer train only; pool mean probability-minus-cutoff per patient. AUC/Brier stay unchanged. Accuracy falls .673 to .630 / .660 to .617. Research tradeoffs, not clinical cutoffs.',size=7.5,color=MUTED,space=9)
     r.par('Neither the earlier ExtraTrees/SVM expansion nor the final elastic-net/HistGradientBoosting/CatBoost search showed a material policy gain. Final LCX/RCA AUC: .731/.733 versus .728/.732; paired delta intervals include zero. Original models retained. Reused splits are development evidence, not independent confirmation; full trial logs: experiments/final_audit.',size=7.5,color=MUTED,space=9)
     r.end()
 
@@ -182,8 +205,8 @@ def build():
     r.par('Actual interactive viewer. Heart-wall meshes, great vessels and independently selectable coronary branches are loaded locally; no asset network dependency during the demo.',size=7.5,color=MUTED)
     r.table([['Vessel mapping','Source geometry / identity'],['LAD','Anterior interventricular / anterior descending branches; trunk FJ2631'],['LCX','Circumflex branches of left coronary artery; FJ2649-FJ2654'],['RCA','Right coronary artery trunk and branches; trunk FJ2723']],widths=[110,399],size=8)
     r.par('<b>Asset:</b> BodyParts3D 4.0, DBCLS, CC BY 4.0; pinned human-atlas derivative. 63 meshes, 37,444 triangles, 1,071,048 bytes. Selected, recentered and uniformly scaled; source names/IDs retained. Generic adult male anatomy, not a patient image. No RWMA-to-lesion mapping or geometry deformation.')
-    r.par('<b>Interaction:</b> rotate, zoom, pan, select vessel, orbit, X-ray, vessel isolation, reset and expanded view. Dynamic artery colors use model probabilities; projected labels remain linked to actual mesh centroids. The renderer limits pixel ratio to 1.5 and uses local compact geometry. Software WebGL browser tests exercise the interface without a dedicated GPU; universal FPS is not claimed.')
-    r.par('<b>System path:</b> Next.js clinical form → validated FastAPI request → calibrated CAD/LAD/LCX/RCA models → SHAP/uncertainty/OOD → simultaneous probability, anatomy and explanation updates. Inputs changed after prediction mark results stale and block stale exports. API failures keep the previous result visibly unchanged and explain how to retry. All input groups are editable; cohort defaults are explicitly marked.')
+    r.par('<b>Interaction:</b> rotate, zoom, pan, select vessel, orbit, X-ray, vessel isolation, reset and expanded view. Artery colors use model probabilities; projected labels connect to artery surface vertices. The artery guide explains typical course and supply, not patient injury. The renderer limits pixel ratio to 1.5. Software WebGL browser tests exercise the interface without a dedicated GPU; universal FPS is not claimed.')
+    r.par('<b>System path:</b> Next.js clinical form → validated FastAPI request → calibrated CAD/LAD/LCX/RCA models → SHAP/uncertainty/OOD → probability, anatomy and explanation updates. Edited inputs mark previous results and explanations stale and block stale exports. API failures preserve the previous result and explain how to retry. Height and weight remain editable; BMI is derived. Cohort defaults are explicitly marked.')
     r.end()
 
     r.begin('06 / Reproducibility, usage & limits','Ready to run and review.','The software, model weights and evidence run locally without cloud credentials or inference APIs.')

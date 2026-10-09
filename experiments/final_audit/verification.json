@@ -1,5 +1,11 @@
 {
   "status": "passed",
+  "registry_display_version_rename": {
+    "from": "cardiovision-1.0",
+    "to": "vesselrisk-1.0",
+    "historical_sha256": "74d8323d9057c3e95a898dbb829e76cccaf9c97a79fe507843657b3cac2432f3",
+    "current_sha256": "572a2398330a0b84c99dd880077a94003ba5fa1370e57e31b11c7ae2acd48e08"
+  },
   "secondary_family_conditional_95ci": {
     "LCX": {
       "Elastic net": {

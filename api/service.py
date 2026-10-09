@@ -36,15 +36,29 @@ class ModelService:
             self.bundles[target] = joblib.load(path)
         self.ood = joblib.load(ARTIFACTS/'ood.joblib')
         self.X, self.ys, _ = load_data()
-        p = np.array([r['probability'] for r in self.evidence['targets']['CAD']['oof']])
-        vessel_p = np.array([[r['probability'] for r in self.evidence['targets'][t]['oof']] for t in ['LAD','LCX','RCA']])
-        order = np.argsort(p)
-        choices = [int(order[int(.85*len(p))]), int(order[int(.10*len(p))]),
-                   int(np.argmax(np.ptp(vessel_p,axis=0))), int(np.argmax(np.abs(self.ys['CAD']-p)))]
-        titles = ['Elevated CAD estimate','Lower CAD estimate','Mixed vessel estimates','Held-out failure case']
-        self.cases = [{'id':str(i),'title':title,'row':i,'features':self.X.iloc[i].to_dict(),
-                       'description':f'{int(self.X.iloc[i].Age)} years · {"Female" if self.X.iloc[i].Sex=="Fmale" else "Male"} · held-out case',
-                       'observed':{t:int(y[i]) for t,y in self.ys.items()}} for i,title in zip(choices,titles)]
+        # Everyday profiles drawn intact from the source workbook. Select by
+        # patient characteristics, while predictions still exclude each row.
+        examples = [
+            (2, 'smoker with chest pain'),
+            (41, 'non-smoker, no diabetes'),
+            (68, 'diabetes, breathlessness'),
+            (115, 'diabetes, high blood pressure'),
+            (12, 'diabetes, high blood pressure'),
+            (6, 'former smoker, chest pain'),
+            (3, 'high blood pressure, breathlessness'),
+            (30, 'non-smoker with chest pain'),
+        ]
+        self.cases = []
+        for row, situation in examples:
+            patient = self.X.iloc[row]
+            person = 'woman' if patient.Sex == 'Fmale' else 'man'
+            self.cases.append({
+                'id': str(row), 'row': row,
+                'title': f'{int(patient.Age)}-year-old {person} · {situation}',
+                'description': 'Example from the dataset. Selecting it fills all 55 inputs; you can edit them.',
+                'features': patient.to_dict(),
+                'observed': {t: int(y[row]) for t, y in self.ys.items()},
+            })
 
     def validate(self, features):
         guard_columns(features.keys())

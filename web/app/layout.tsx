@@ -9,5 +9,6 @@ import '@fontsource/ibm-plex-mono/500.css';
 import './globals.css';
 import './contrast.css';
 import './polish.css';
+import './interaction.css';
 export const metadata: Metadata = { title: 'VesselRisk · Explainable coronary risk', description: 'Explore leakage-audited CAD and coronary vessel predictions in real 3D anatomy, with calibrated probabilities and transparent validation evidence.' };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="en"><body>{children}</body></html>; }

@@ -5,21 +5,25 @@ import path from 'node:path';
 test('real prediction → coronary anatomy → local explanation → evidence → patient edit',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');
-  await expect(page.getByRole('heading',{name:'Coronary risk, made visible.'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Explore coronary risk.'})).toBeVisible();
   await page.getByRole('button',{name:'Predict coronary risk',exact:true}).click();
-  await expect(page.getByText(/held-out demonstration ·/)).toBeVisible();
-  await expect(page.getByRole('heading',{name:'Left anterior descending',exact:true})).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Export case', exact: true })).toBeEnabled();
+  await expect(page.locator('.explanation-panel').getByRole('heading',{name:'Left anterior descending',exact:true})).toBeVisible();
   await expect(page.locator('canvas')).toBeVisible();
-  await expect(page.getByText('63 anatomical structures')).toBeVisible();
+  await expect(page.locator('.selected-vessel-summary')).toHaveCount(0);
   await expect(page.getByRole('button',{name:'Select LAD in 3D'})).toBeVisible();
-  await expect(page.locator('.orientation')).toContainText('RESET VIEW');
+  await page.getByRole('combobox',{name:'View prediction target'}).selectOption('CAD');
+  await page.getByRole('button',{name:'CAD classification information'}).click();
+  await expect(page.getByRole('dialog',{name:'Overall CAD classification'})).toContainText('research cutoff of 50%');
+  await page.keyboard.press('Escape');
+  await page.getByRole('combobox',{name:'View prediction target'}).selectOption('LAD');
   await expect(page.locator('.color-key')).toContainText('30–<60%');
   const outDir=path.resolve('../demo/screenshots');fs.mkdirSync(outDir,{recursive:true});
   await page.screenshot({path:path.join(outDir,'patient-workspace.png'),fullPage:true});
   await page.locator('.heart-viewer').screenshot({path:path.join(outDir,'coronary-anatomy.png')});
   // Vessel selection routes to the corresponding independently trained explanation.
   await page.getByRole('button',{name:'Select LCX in 3D'}).click();
-  await expect(page.getByRole('heading',{name:'Left circumflex',exact:true})).toBeVisible();
+  await expect(page.locator('.explanation-panel').getByRole('heading',{name:'Left circumflex',exact:true})).toBeVisible();
   await page.getByRole('button',{name:'X-ray',exact:true}).click();
   await expect(page.getByRole('button',{name:'X-ray',exact:true})).toHaveAttribute('aria-pressed','true');
   await page.getByRole('button',{name:'Vessels only',exact:true}).click();
@@ -43,11 +47,12 @@ test('real prediction → coronary anatomy → local explanation → evidence �
   await expect(page.getByText('Guard runs before all preprocessing')).toBeVisible();
   await page.screenshot({path:path.join(outDir,'leakage-provenance.png'),fullPage:true});
   await page.getByRole('button',{name:'Patient workspace',exact:true}).click();
+  await page.getByRole('button',{name:'Expand patient profile'}).click();
   await page.getByLabel('Age',{exact:true}).fill('85');
-  await expect(page.getByText('Showing the previous result · predict to apply edited inputs')).toBeVisible();
+  await expect(page.locator('.explanation-panel').getByRole('status')).toContainText('Previous explanation');
   await expect(page.getByRole('button',{name:'Export case',exact:true})).toBeDisabled();
   await page.getByRole('button',{name:'Predict coronary risk',exact:true}).click();
-  await expect(page.getByText(/held-out sensitivity ·/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Export case', exact: true })).toBeEnabled();
   await expect(page.getByRole('button',{name:'Reveal recorded outcomes'})).toHaveCount(0);
   const download=page.waitForEvent('download');await page.getByRole('button',{name:'Export case',exact:true}).click();
   const exported=await download;
@@ -58,20 +63,4 @@ test('real prediction → coronary anatomy → local explanation → evidence �
     expect(exportedCase.targets[t].model_reference.member).toMatch(/^folds\[\d+\]\.model$/);
   }
   expect(errors).toEqual([]);
-});
-
-test('mobile input, working 3D and evidence without horizontal overflow',async({page})=>{
-  await page.setViewportSize({width:390,height:844});await page.goto('/');
-  await page.getByRole('button',{name:'Predict coronary risk',exact:true}).click();
-  await expect(page.getByText(/held-out demonstration ·/)).toBeVisible();
-  await page.locator('.heart-viewer').scrollIntoViewIfNeeded();
-  await expect(page.locator('canvas')).toBeVisible();
-  const outDir=path.resolve('../demo/screenshots');fs.mkdirSync(outDir,{recursive:true});
-  await page.screenshot({path:path.join(outDir,'mobile-workspace.png'),fullPage:true});
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
-  await page.getByRole('button',{name:'Evidence Lab',exact:true}).click();
-  await expect(page.getByRole('heading',{name:'Every claim, inspectable.'})).toBeVisible();
-  await page.getByRole('tab',{name:'LCX',exact:true}).click();
-  await expect(page.locator('.research-thresholds')).toContainText('0.840');
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });

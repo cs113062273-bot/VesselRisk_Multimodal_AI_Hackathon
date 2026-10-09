@@ -1,5 +1,13 @@
 # Verification record
 
+## Model recheck, 2026-10-09
+
+The deployed four model bundles, OOD artifact and original evaluation evidence match the final-audit fingerprints byte for byte. Recomputed OOF AUC remains CAD .9250, LAD .8388, LCX .7278 and RCA .7318. Training/inference target guards, repeated held-out split coverage, exported estimator identity and calibrated-probability SHAP reconstruction were rechecked.
+
+The archived experiment verifier initially rejected the registry because the product rename changed only `version` from `cardiovision-1.0` to `vesselrisk-1.0`. Reversing that exact field replacement reproduces the historical SHA-256. The verifier now records that migration explicitly while retaining the original expected fingerprints; any additional registry-byte change or model change still fails. A regression check covers altered training counts, unknown versions and changed model bytes. The underlying prediction models were not refitted.
+
+All 20 scientific/API tests pass. Replaying the 40 saved outer models reproduces all 2,424 per-repeat held-out predictions exactly (maximum absolute difference zero), and every saved SHAP background is an exact subset of its model's training data. The archived LCX/RCA audit also passes all 160 inner-trial, selection, split, metric and paired-interval checks after the explicit display-version migration.
+
 ## Final audit verification (supersedes earlier counts below)
 
 On 2026-10-02, all **19** scientific/API checks pass, including exact exported fold-model identity and rejection of an unpaired workbook before unpickling. Frozen OOF/threshold metrics and original artifact hashes verify unchanged. Typecheck, ESLint and production build pass. The two existing desktop/mobile software-WebGL Playwright journeys pass in **15.6 seconds**, with real exported model-member checks. Ten review screenshots were recaptured with no browser errors. The updated app ran through the one-command launcher on dedicated review ports 3001/8001.

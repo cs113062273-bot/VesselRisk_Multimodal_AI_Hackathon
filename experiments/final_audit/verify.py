@@ -10,6 +10,24 @@ from ml.train import metrics, json_write
 HERE = Path(__file__).resolve().parent
 
 
+def verify_frozen_artifacts(fingerprints):
+    registry_rename = None
+    for name, digest in fingerprints.items():
+        raw = (ARTIFACTS / name).read_bytes()
+        if hashlib.sha256(raw).hexdigest() == digest:
+            continue
+        # Preserve the historical fingerprint. Accept only the exact documented
+        # display-version rename; every other byte must match the original file.
+        if name == 'registry.json' and json.loads(raw).get('version') == 'vesselrisk-1.0':
+            original = raw.replace(b'"version": "vesselrisk-1.0"', b'"version": "cardiovision-1.0"', 1)
+            if hashlib.sha256(original).hexdigest() == digest:
+                registry_rename = {'from': 'cardiovision-1.0', 'to': 'vesselrisk-1.0',
+                                  'historical_sha256': digest, 'current_sha256': hashlib.sha256(raw).hexdigest()}
+                continue
+        raise AssertionError(f'Frozen artifact changed: {name}')
+    return registry_rename
+
+
 def paired_ci(y, base, candidate):
     rng = np.random.default_rng(SEED)
     groups = [np.flatnonzero(y == v) for v in [0, 1]]
@@ -26,8 +44,9 @@ def verify():
     execution = json.loads((HERE / 'execution.json').read_text())
     assert hashlib.sha256((HERE / 'protocol.json').read_bytes()).hexdigest() == execution['protocol_sha256']
     assert hashlib.sha256((HERE / 'run.py').read_bytes()).hexdigest() == execution['runner_sha256']
-    for name, digest in execution['frozen_artifacts'].items():
-        assert hashlib.sha256((ARTIFACTS / name).read_bytes()).hexdigest() == digest
+    registry_rename = verify_frozen_artifacts(execution['frozen_artifacts'])
+    if registry_rename:
+        print('Registry display-version rename verified: cardiovision-1.0 -> vesselrisk-1.0; all other bytes match the historical fingerprint.')
     evidence = json.loads((ARTIFACTS / 'evidence.json').read_text(encoding='utf-8'))
     _, ys, _ = load_data()
     secondary = {}
@@ -84,9 +103,10 @@ def verify():
                              for name in ['Elastic net', 'HistGradientBoosting', 'CatBoost']}
         print(f'{target}: all 80 inner trials, training-only winners, split coverage, fold/repeat/pooled metrics and paired intervals verified.')
     json_write(HERE / 'verification.json', {'status': 'passed',
+        'registry_display_version_rename': registry_rename,
         'secondary_family_conditional_95ci': secondary,
         'scope': 'Frozen-prediction audit, not new validation. Secondary family intervals are descriptive, unadjusted for multiple comparisons and must not select a winner.'})
-    print('All frozen production fingerprints unchanged; no additional fitting performed.')
+    print('All frozen model/evidence fingerprints verified; registry display-version changes explicitly accounted for. No additional fitting performed.')
 
 
 if __name__ == '__main__':

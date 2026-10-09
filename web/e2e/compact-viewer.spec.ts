@@ -1,0 +1,61 @@
+import { test, expect } from '@playwright/test';
+import path from 'node:path';
+
+for (const width of [1440]) test(`anatomy information overlays a stable canvas and expanded view retains the estimate at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 900 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Predict coronary risk', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Export case', exact: true })).toBeEnabled();
+  const viewer = page.locator('.heart-viewer');
+  const canvas = page.locator('.anatomy-canvas');
+  await expect(viewer.locator('canvas')).toBeVisible();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await expect(page.locator('.selected-vessel-summary')).toHaveCount(0);
+  await expect(page.locator('.artery-guide')).toHaveCount(0);
+  await viewer.scrollIntoViewIfNeeded();
+  const before = await canvas.boundingBox();
+  const heading = await viewer.locator('.viewer-heading').boundingBox();
+  expect(heading!.height).toBeLessThan(85);
+  await page.getByRole('button', { name: 'Artery information' }).click();
+  await expect(page.getByRole('dialog', { name: 'LAD anatomy' })).toContainText('Down the front toward the heart’s tip');
+  const after = await canvas.boundingBox();
+  expect(after!.y).toBeCloseTo(before!.y, 1);
+  expect(after!.height).toBeCloseTo(before!.height, 1);
+  // Projected artery labels must not paint over or intercept the explanation.
+  expect(await page.getByRole('dialog', { name: 'LAD anatomy' }).evaluate(panel => {
+    const box = panel.getBoundingClientRect();
+    return [...document.querySelectorAll('.projected-label')].every(label => {
+      if (getComputedStyle(label).visibility === 'hidden') return true;
+      const rect = label.getBoundingClientRect();
+      const left = Math.max(box.left, rect.left), right = Math.min(box.right, rect.right);
+      const top = Math.max(box.top, rect.top), bottom = Math.min(box.bottom, rect.bottom);
+      return left >= right || top >= bottom || panel.contains(document.elementFromPoint((left + right) / 2, (top + bottom) / 2));
+    });
+  })).toBe(true);
+  await viewer.screenshot({ path: path.resolve(`../demo/screenshots/artery-info-${width}.png`) });
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Artery information' })).toBeFocused();
+  await page.getByRole('button', { name: 'Artery information' }).click();
+  await viewer.click({ position: { x: 8, y: 8 } });
+  await expect(page.locator('.artery-guide')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Artery information' }).click();
+  await page.getByRole('button', { name: 'Select RCA in 3D', exact: true }).click();
+  await expect(page.locator('.artery-guide')).toHaveCount(0);
+  const value = await page.locator('.explanation-panel').getByRole('tab', { name: 'RCA', exact: true }).locator('strong').innerText();
+  await page.getByRole('button', { name: 'Expand anatomy' }).click();
+  await expect(page.locator('.selected-vessel-summary')).toContainText(value);
+  await expect(page.locator('.selected-vessel-summary')).toContainText('Stenosis probability');
+  await page.getByRole('button', { name: 'Artery information' }).click();
+  await expect(page.getByRole('dialog', { name: 'RCA anatomy' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(viewer).toHaveClass(/viewer-full/);
+  await viewer.screenshot({ path: path.resolve(`../demo/screenshots/expanded-anatomy-${width}.png`) });
+  await page.keyboard.press('Escape');
+  await expect(viewer).not.toHaveClass(/viewer-full/);
+  await page.getByRole('button', { name: 'Expand patient profile' }).click();
+  await page.getByRole('button', { name: 'Predict coronary risk', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Export case', exact: true })).toBeEnabled();
+  await expect(viewer).not.toContainText('No change');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

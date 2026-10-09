@@ -13,7 +13,7 @@ async def lifespan(app):
     service = get_service()
     # Compile SHAP's masking kernel and cache a real held-out opening prediction
     # before readiness, rather than making the first visitor pay that cold cost.
-    opening_case = service.cases[2]
+    opening_case = service.cases[0]
     service.predict(opening_case['features'], opening_case['id'])
     yield
 
@@ -41,7 +41,7 @@ def schema():
 
 @app.get('/cases')
 def cases():
-    return {'cases':get_service().cases,'note':'Selected to demonstrate contrasting outputs, not a representative performance sample. All predictions use models that excluded the case.'}
+    return {'cases':get_service().cases,'note':'Examples of different patient characteristics from the dataset, not a representative performance sample. All predictions use models that excluded the case.'}
 
 
 @app.get('/model-info')

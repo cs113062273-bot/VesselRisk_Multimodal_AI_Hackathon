@@ -8,7 +8,7 @@ Repository deliverables are implemented and locally verified. The final account-
 - [x] Local/global calibrated-probability SHAP; model disagreement/ranges and representation warnings.
 - [x] Real licensed coronary meshes; LAD/LCX/RCA independently selectable and colored.
 - [x] Patient input → API → prediction/explanation → 3D verified end to end.
-- [x] All 55 inputs editable; JSON import/export; held-out cases and failure example.
+- [x] All 55 model inputs available; BMI derived from editable height and weight; JSON import/export; held-out cases and failure example.
 - [x] Evidence Lab with validation, robustness, interpretability, data and provenance.
 - [x] Visible decision-support/education disclaimer, no lesion localization or treatment effect claims.
 - [x] One-command local startup, production build, lock file, Docker packaging and minimal CI.

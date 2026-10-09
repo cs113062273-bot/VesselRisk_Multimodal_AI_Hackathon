@@ -27,12 +27,6 @@
 .input-footer > p, .input-actions button, .import-button { color: var(--reading); font-size: 10px; }
 .input-footer .primary-button { font-size: 12px; }
 .leakage-seal strong, .leakage-seal p { font-size: 10px; color: #466e65; }
-.risk-overview { min-height: 96px; }
-.risk-overview button { padding: 2px 14px; gap: 4px; }
-.risk-overview button > span { color: var(--reading); font-size: 11px; }
-.risk-overview button > small { color: var(--quiet-reading); font-size: 9px; }
-.risk-overview button > strong { filter: brightness(.66); }
-.risk-overview button.focused { background: #edf3f6; box-shadow: inset 0 -2px var(--navy); }
 .heart-viewer { padding: 18px 20px 12px; background-image: radial-gradient(ellipse at 48% 47%, #254759 0%, #173447 43%, #102939 85%); }
 .eyebrow.light { color: #a7c1ce; font-size: 9px; }
 .viewer-heading h2 { font-size: 24px; margin-top: 3px; }
@@ -48,19 +42,11 @@
 .viewer-controls { padding: 10px 0; }
 .viewer-controls button { color: #c4d7e1; font-size: 11px; padding: 7px 10px; border-color: #5a7b8c; transition: background .15s, border-color .15s; }
 .viewer-controls button:hover, .viewer-controls button[aria-pressed=true] { color: white; background: #325968; border-color: #b4d2dc; }
-.vessel-selector button { padding: 9px 10px; border-color: #486778; color: #d4e4ec; }
-.vessel-selector button.active { border-color: #d9e9f0; background: #294b5c; box-shadow: inset 0 0 0 1px #d9e9f033; }
-.vessel-selector strong { font-size: 12px; }
-.vessel-selector small { color: #b6cdd8; font-size: 9px; }
-.vessel-selector b { font-size: 14px; }
-.vessel-selector i { width: 6px; height: 6px; }
 .color-key { color: #b6ccd8; font-size: 10px; margin: 10px 0 6px; gap: 10px; }
 .anatomy-note, .anatomy-credit { color: #aec6d3; font-size: 9px; }
 .anatomy-credit { font-size: 8px; }
 .on-dark { color: #c4d7e1; border-color: #5a7b8c; }
 .heart-viewer button:focus-visible { outline-color: white; }
-.prediction-status { color: var(--reading); font-size: 10px; }
-.results-stale .prediction-status { color: #77551c; background: #fff4da; border-radius: 4px; padding: 5px 8px; }
 .target-tabs button { font-size: 11px; color: var(--reading); }
 .target-tabs button[aria-selected=true] { color: var(--navy); box-shadow: inset 0 -2px var(--navy), 0 1px 4px #16384c0a; }
 .explanation-content { padding: 13px 18px 18px; }
@@ -186,8 +172,6 @@
 @media (min-width: 1600px) {
   .workspace-grid { grid-template-columns: 304px minmax(0, 1fr) 384px; gap: 22px; }
   .contribution-row strong { font-size: 12px; }
-  .risk-overview button > strong { font-size: 30px; }
-  .risk-overview .overall-risk > strong { font-size: 35px; }
 }
 @media (min-width: 1400px) and (max-width: 1599px) {
   .viewer-heading h2 { font-size: 23px; }
@@ -195,40 +179,4 @@
 @media (max-width: 1250px) {
   .metric-row small { white-space: normal; }
   .global-bars > div { grid-template-columns: 145px 1fr 55px; gap: 10px; }
-  .vessel-selector small { font-size: 8px; }
-}
-@media (max-width: 760px) {
-  .workspace-heading p { font-size: 11px; }
-  .risk-overview button { padding: 2px 8px; }
-  .risk-overview button > span { font-size: 9px; }
-  .risk-overview button > small { font-size: 8px; }
-  .heart-viewer { padding: 16px 12px 12px; }
-  .viewer-heading h2 { font-size: 23px; }
-  .viewer-topline { font-size: 9px; }
-  .viewer-hint { font-size: 9px; }
-  .viewer-controls { gap: 5px; }
-  .viewer-controls button { padding: 7px; font-size: 10px; }
-  .vessel-selector button { gap: 5px; padding: 8px; }
-  .vessel-selector strong { font-size: 11px; }
-  .vessel-selector b { font-size: 12px; }
-  .color-key { font-size: 9px; gap: 8px; }
-  .anatomy-note { font-size: 8px; }
-  .lab-tabs { gap: 10px; }
-  .lab-tabs button { font-size: 10px; }
-  .lab-navigation > .target-tabs { max-width: none; }
-  .auc-feature { min-width: 0; padding-right: 0; }
-  .metric-row { gap: 22px 10px; }
-  .metric-row span { font-size: 10px; }
-  .metric-row b { font-size: 21px; }
-  .metric-row small { font-size: 9px; }
-  .protocol-list { grid-template-columns: 110px 1fr; gap: 10px; font-size: 11px; }
-  .lab-two-columns { gap: 28px; }
-  .evidence-lab th { padding: 10px 8px; font-size: 10px; }
-  .evidence-lab td, .evidence-lab td:first-child { padding: 12px 8px; font-size: 11px; }
-  .confusion { grid-template-columns: 80px 1fr 1fr; }
-  .confusion > span, .confusion small { font-size: 10px; }
-  .global-bars > div { grid-template-columns: 135px 1fr 52px; font-size: 11px; gap: 9px; }
-  .global-bars b { font-size: 11px; }
-  .leakage-experiment { grid-template-columns: 1fr 85px 75px; font-size: 10px; }
-  .leakage-experiment span:nth-child(3n) { font-size: 9px; }
 }

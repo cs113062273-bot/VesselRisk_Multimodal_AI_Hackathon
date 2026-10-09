@@ -88,7 +88,7 @@ def test_exact_models_have_only_eligible_inputs_and_valid_hashes(service):
 
 
 def test_prediction_shap_reconstruction_and_heldout_isolation(client,service):
-    case=next(c for c in service.cases if c['title']=='Mixed vessel estimates')
+    case=next(c for c in service.cases if c['id']=='2')
     res=client.post('/predict',json={'features':case['features'],'case_id':case['id']})
     assert res.status_code==200
     out=res.json(); assert set(out['targets'])==set(TARGETS)
@@ -112,8 +112,38 @@ def test_prediction_shap_reconstruction_and_heldout_isolation(client,service):
         assert ref['training_indices_sha256']==hashlib.sha256(json.dumps(training,separators=(',',':')).encode()).hexdigest()
 
 
+def test_examples_match_source_records_and_patient_descriptions(service):
+    assert len(service.cases) == 8
+    assert len({case['id'] for case in service.cases}) == 8
+    for case in service.cases:
+        row = int(case['id'])
+        features = case['features']
+        assert features == service.X.iloc[row].to_dict()
+        person = 'woman' if features['Sex'] == 'Fmale' else 'man'
+        assert case['title'].startswith(f"{features['Age']}-year-old {person} · ")
+        scenario = case['title'].split(' · ')[1]
+        if 'non-smoker' in scenario or 'former smoker' in scenario:
+            assert features['Current Smoker'] == 0
+        elif 'smoker' in scenario:
+            assert features['Current Smoker'] == 1
+        if 'former smoker' in scenario:
+            assert features['EX-Smoker'] == 1
+        if 'diabetes' in scenario:
+            assert features['DM'] == (0 if 'no diabetes' in scenario else 1)
+        if 'high blood pressure' in scenario:
+            assert features['HTN'] == 1
+        if 'chest pain' in scenario:
+            assert features['Typical Chest Pain'] == 1
+        if 'breathlessness' in scenario:
+            assert features['Dyspnea'] == 'Y'
+        for bundle in service.bundles.values():
+            folds = [fold for fold in bundle['folds'] if row in fold['test_indices']]
+            assert len(folds) == 2
+            assert all(row not in fold['train_indices'] for fold in folds)
+
+
 def test_patient_edit_updates_predictions_and_invalidates_observed_outcome(client,service):
-    case=next(c for c in service.cases if c['title']=='Lower CAD estimate')
+    case=next(c for c in service.cases if c['id']=='68')
     first=client.post('/predict',json={'features':case['features'],'case_id':case['id']}).json()
     changed={**case['features'],'Age':85,'Typical Chest Pain':1,'EF-TTE':25,'HTN':1}
     out=client.post('/predict',json={'features':changed,'case_id':case['id']}).json()
@@ -173,6 +203,29 @@ def test_changed_workbook_rejected_before_unpickling(monkeypatch,tmp_path):
     monkeypatch.setattr('api.service.joblib.load',must_not_load)
     with pytest.raises(RuntimeError,match='Dataset integrity check failed'):
         ModelService()
+
+
+def test_audit_accepts_only_exact_registry_display_rename(monkeypatch,tmp_path):
+    from experiments.final_audit import verify as audit
+    raw=(ARTIFACTS/'registry.json').read_bytes()
+    original=raw.replace(b'"version": "vesselrisk-1.0"',b'"version": "cardiovision-1.0"',1)
+    historical=json.loads((ROOT/'experiments/final_audit/execution.json').read_text())['frozen_artifacts']['registry.json']
+    assert hashlib.sha256(original).hexdigest()==historical
+    monkeypatch.setattr(audit,'ARTIFACTS',tmp_path)
+    registry=tmp_path/'registry.json'
+    registry.write_bytes(raw)
+    assert audit.verify_frozen_artifacts({'registry.json':historical})['to']=='vesselrisk-1.0'
+    registry.write_bytes(raw.replace(b'"training_n": 303',b'"training_n": 302',1))
+    with pytest.raises(AssertionError,match='Frozen artifact changed: registry.json'):
+        audit.verify_frozen_artifacts({'registry.json':historical})
+    registry.write_bytes(raw.replace(b'vesselrisk-1.0',b'unapproved-2.0',1))
+    with pytest.raises(AssertionError,match='Frozen artifact changed: registry.json'):
+        audit.verify_frozen_artifacts({'registry.json':historical})
+    model=tmp_path/'CAD.joblib'
+    model.write_bytes(b'changed model')
+    expected=json.loads((ROOT/'experiments/final_audit/execution.json').read_text())['frozen_artifacts']['CAD.joblib']
+    with pytest.raises(AssertionError,match='Frozen artifact changed: CAD.joblib'):
+        audit.verify_frozen_artifacts({'CAD.joblib':expected})
 
 
 def test_training_only_threshold_splits_and_oof_coverage(service):

@@ -7,8 +7,6 @@
 .input-tabs button{font-size:10px;color:#698593}
 .input-footer>p{color:#688493;font-size:9px}
 .leakage-seal p{color:#6d8e85;font-size:9px}
-.risk-overview button>span{color:#5f7e90;font-size:10px}
-.risk-overview button>small{color:#7c96a5;font-size:8px}
 .explanation-content>.eyebrow{color:#5d7e8f;font-size:9px}
 .target-name{color:#3c6177}
 .detail-probability>span{color:#728d9c;font-size:9px}
@@ -32,9 +30,8 @@
 .anatomy-credit{color:#7a98aa;font-size:7px}
 .viewer-topline{color:#8faaba;font-size:9px}
 .viewer-hint{color:#a8bfcb;font-size:9px}
-.vessel-selector small{color:#87a9ba;font-size:7px}
 .safety-footer p{font-size:10px;color:#58778a}
-@media(max-width:760px){.clinical-field>span:first-child{font-size:9px}.input-tabs button{font-size:9px}.risk-overview button>span{font-size:8px}.risk-overview button>small{font-size:7px}.viewer-topline{font-size:7px}.viewer-hint{font-size:8px}.contribution-row strong{font-size:11px}.contribution-row>div:first-child>span{font-size:9px}.contribution-row>b{font-size:10px}.explanation-content>.fine-print{font-size:9px}.safety-footer p{font-size:9px}}
+
 
 /* Match the legend to the three probability colors actually used by the meshes. */
 .color-key>span{display:inline-flex;align-items:center;gap:4px}
