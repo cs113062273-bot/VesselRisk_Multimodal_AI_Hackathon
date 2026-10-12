@@ -44,4 +44,4 @@ The reference top-five directions were preserved in these comparisons, but membe
 
 ## Where to inspect
 
-In the workspace, hover calibration points for sample counts and intervals. In **Evidence Lab → Validation**, expand **Calibration evidence** for counts, intervals, baseline comparisons and per-repeat performance. In **Interpretability**, expand **Local explanation stability** for sensitivity results. Detailed evidence stays in these expandable sections rather than adding another permanent workspace block.
+In **Model evidence > Validation**, hover calibration points for sample counts and intervals; expand **Calibration evidence** for the full counts, intervals, baseline comparisons and per-repeat performance. In **Interpretability**, expand **Local explanation stability** for the fixed four-profile sensitivity results. **Patient workspace** separately shows the current patient's contributions, candidate disagreement and fitted-model range; it does not display the fixed cohort calibration curve.

@@ -1,5 +1,5 @@
 {
-  "captured_utc": "2026-10-09T07:22:28.509Z",
+  "captured_utc": "2026-10-09T09:23:19.870Z",
   "source": "Real local production frontend + FastAPI + shipped model artifacts; software WebGL",
   "captures": [
     {
@@ -8,7 +8,7 @@
     },
     {
       "file": "02-lad-shap.png",
-      "description": "LAD selected; calibrated probability, model family and local SHAP in percentage points."
+      "description": "Patient prediction: LAD probability, contribution accounting, top influences, model disagreement and refitted range."
     },
     {
       "file": "03-lcx-selected-xray.png",
@@ -21,6 +21,10 @@
     {
       "file": "05-expanded-heart.png",
       "description": "Expanded real 3D coronary anatomy; 63 source structures, individually mapped territories."
+    },
+    {
+      "file": "11-model-evidence-overview.png",
+      "description": "Fixed model evidence: training and validation workflow, four-target performance and scientific limits, independent of patient edits."
     },
     {
       "file": "06-cad-metrics.png",

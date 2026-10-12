@@ -51,11 +51,14 @@ def main():
         def node_command(*arguments):
             return ['cmd', '/d', '/c', npm, *arguments] if os.name == 'nt' else [npm, *arguments]
         run(node_command('ci', '--no-audit', '--no-fund'), extracted / 'web', env)
+        # Delivery contains portable source, not the author's machine-specific build.
+        run(node_command('run', 'build'), extracted / 'web', env)
         browser_env = {**env, 'CI': '1', 'DEMO_URL': 'http://127.0.0.1:3012',
                        'PLAYWRIGHT_API_PORT': '8003', 'PLAYWRIGHT_PYTHON': sys.executable}
         run(node_command('exec', '--', 'playwright', 'test', 'reliability.spec.ts', 'workspace-analytics.spec.ts'), extracted / 'web', browser_env)
         result.update({'scientific_api_checks': 30, 'frozen_metrics': 'passed',
                        'desktop_browser_checks': 3, 'fresh_frontend_dependencies': 'npm ci',
+                       'fresh_production_build': 'npm run build',
                        'environment': 'Pinned existing Python environment; extracted source and fresh frontend dependencies. Not a fresh Python installation.'})
     output = args.archive.with_suffix('.verification.json')
     output.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')

@@ -8,7 +8,7 @@ A probability alone does not explain which coronary vessel it refers to, which m
 
 ## What it does
 
-Enter a clinical profile, predict overall CAD and LAD/LCX/RCA stenosis, then rotate and select real coronary anatomy to inspect each estimate. The selected artery stays linked to its patient's measurements and signed SHAP contributions. Evidence Lab exposes validation, calibration, model comparisons, weak results, and held-out failures.
+Enter a clinical profile, predict overall CAD and LAD/LCX/RCA stenosis, then rotate and select real coronary anatomy to inspect each estimate. The selected artery stays linked to its patient's measurements and signed SHAP contributions. Model evidence exposes validation, calibration, model comparisons, weak results, and held-out failures.
 
 ## How we built it
 
@@ -16,7 +16,7 @@ The supplied 303-patient workbook provides 55 eligible inputs. A programmatic gu
 
 ## What we measured
 
-Internal repeat-averaged nested OOF ROC-AUC is 0.925 for CAD, 0.839 for LAD, 0.728 for LCX and 0.732 for RCA. The vessel models have weaker recall at the fixed 0.50 research threshold. Exploratory training-selected thresholds increase sensitivity with substantially more false positives; they do not improve AUC or establish clinical operating points. Full metrics and methods are included in the six-page report and Evidence Lab.
+Internal repeat-averaged nested OOF ROC-AUC is 0.925 for CAD, 0.839 for LAD, 0.728 for LCX and 0.732 for RCA. The vessel models have weaker recall at the fixed 0.50 research threshold. Exploratory training-selected thresholds increase sensitivity with substantially more false positives; they do not improve AUC or establish clinical operating points. Full metrics and methods are included in the six-page report and Model evidence.
 
 ## What makes the work inspectable
 
@@ -34,7 +34,7 @@ OpenAI Codex assisted research, implementation, debugging, verification and draf
 
 ## Entry preparation (not public project copy)
 
-- Use `demo/screenshots/patient-workspace.png` as the hero; follow it with the isolated coronary view and Evidence Lab.
+- Use `demo/screenshots/patient-workspace.png` as the hero; follow it with the isolated coronary view and Model evidence.
 - Add the actual public source repository link, team/author names and a judge-accessible 3-10 minute YouTube demo. These are not available in this workspace and must not be invented.
 - Describe the final isolated model investigation from `docs/FINAL_AUDIT_RESULTS.md` only after reviewing its completed results. CatBoost is an audit-only dependency, not a deployed classifier.
 - The local application is ready to demonstrate. A public deployment is optional under the supplied Track A PDF; the demonstration video is a required deliverable.

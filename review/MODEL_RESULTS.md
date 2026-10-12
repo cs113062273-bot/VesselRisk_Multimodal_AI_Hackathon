@@ -81,7 +81,7 @@
 
 - 最後一輪限縮實驗：LCX/RCA 加入 ExtraTrees 與 RBF SVM，各兩組參數；expanded nested policy 未通過預先設定的 AUC/Brier 改善門檻，四個 deployed model hashes 全部保留。
 - Research threshold：只用 outer train 的 calibrated 3-fold inner OOF，在固定 .15:.01:.75 grid 最大化 F1；每人平均兩次 probability-minus-cutoff。LCX recall/F1 .840/.641、RCA .868/.631，precision .518/.495；FP 30→93 / 34→101、accuracy 降低。AUC/Brier 不变，workspace 保持 0.50。重用 outer splits 的 development evidence 不是獨立確認。
-- Threshold 值與 retention decision 分開：前者 training-only，後者使用 pooled outer-test labels，只是 development audit。Evidence Lab 平等展示 Fixed 0.50 與 Exploratory training-selected F1 operating point，不依 retention 結果高亮 winner；不宣稱最佳 threshold 或獨立確認的改善。
+- Threshold 值與 retention decision 分開：前者 training-only，後者使用 pooled outer-test labels，只是 development audit。Model evidence 平等展示 Fixed 0.50 與 Exploratory training-selected F1 operating point，不依 retention 結果高亮 winner；不宣稱最佳 threshold 或獨立確認的改善。
 - 資料：原始 XLSX 的 303 人、59 欄；55 個輸入，無 missing／duplicate rows。一筆 Cath Normal／LAD Stenotic 原始矛盾標籤保留，不自行改成 vessel union。
 - 切分：seed 2026；5-fold × 2-repeat stratified outer CV；每個 outer train 內 3-fold inner CV 比較六個候選設定。沒有另宣稱一份未參與開發的 external test。
 - 選模：inner ROC-AUC − 0.25 × Brier；先選每個 family 的參數，再選 family。Headline 評估 nested selection policy；不是 final full-cohort model 的外部成績。

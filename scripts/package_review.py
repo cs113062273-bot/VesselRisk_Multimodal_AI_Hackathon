@@ -3,7 +3,6 @@ import csv
 import hashlib
 import html
 import json
-import os
 import sys
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -13,6 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 REVIEW = ROOT / 'review'
 OUTPUT = ROOT / 'submission'
+from scripts.submission_files import collect_files, validate_required, EXCLUDED_DIRS, EXCLUDED_FILES
 METRICS = ['accuracy', 'precision', 'recall', 'f1', 'roc_auc', 'pr_auc', 'brier']
 LABELS = ['Accuracy', 'Precision', 'Recall', 'F1', 'ROC-AUC', 'PR-AUC (AP)', 'Brier']
 
@@ -32,7 +32,7 @@ def make_evidence():
     registry = json.loads((ROOT / 'ml/artifacts/registry.json').read_text(encoding='utf-8'))
     anatomy = json.loads((ROOT / 'web/public/anatomy/manifest.json').read_text(encoding='utf-8'))
     screenshots = json.loads((REVIEW / 'screenshots/index.json').read_text(encoding='utf-8'))
-    assert len(screenshots['captures']) == 10 and not screenshots['browser_errors']
+    assert len(screenshots['captures']) == 11 and not screenshots['browser_errors']
     results = {}
     csv_rows = []
     for target, e in evidence['targets'].items():
@@ -53,7 +53,6 @@ def make_evidence():
     refinement=json.loads((ROOT/'experiments/vessel_refinement/results.json').read_text(encoding='utf-8'))
     assert refinement['baseline_evidence_sha256']==hashlib.sha256((ROOT/'ml/artifacts/evidence.json').read_bytes()).hexdigest()
     assert refinement['baseline_registry_sha256']==hashlib.sha256((ROOT/'ml/artifacts/registry.json').read_bytes()).hexdigest()
-    write_json(REVIEW/'RESEARCH_THRESHOLDS.json',refinement)
     research_rows=[]
     for t,e in refinement['targets'].items():
         for v in e['variants']:
@@ -94,7 +93,7 @@ def make_evidence():
     methods = [
         '最後一輪限縮實驗：LCX/RCA 加入 ExtraTrees 與 RBF SVM，各兩組參數；expanded nested policy 未通過預先設定的 AUC/Brier 改善門檻，四個 deployed model hashes 全部保留。',
         'Research threshold：只用 outer train 的 calibrated 3-fold inner OOF，在固定 .15:.01:.75 grid 最大化 F1；每人平均兩次 probability-minus-cutoff。LCX recall/F1 .840/.641、RCA .868/.631，precision .518/.495；FP 30→93 / 34→101、accuracy 降低。AUC/Brier 不变，workspace 保持 0.50。重用 outer splits 的 development evidence 不是獨立確認。',
-        'Threshold 值與 retention decision 分開：前者 training-only，後者使用 pooled outer-test labels，只是 development audit。Evidence Lab 平等展示 Fixed 0.50 與 Exploratory training-selected F1 operating point，不依 retention 結果高亮 winner；不宣稱最佳 threshold 或獨立確認的改善。',
+        'Threshold 值與 retention decision 分開：前者 training-only，後者使用 pooled outer-test labels，只是 development audit。Model evidence 平等展示 Fixed 0.50 與 Exploratory training-selected F1 operating point，不依 retention 結果高亮 winner；不宣稱最佳 threshold 或獨立確認的改善。',
         '資料：原始 XLSX 的 303 人、59 欄；55 個輸入，無 missing／duplicate rows。一筆 Cath Normal／LAD Stenotic 原始矛盾標籤保留，不自行改成 vessel union。',
         '切分：seed 2026；5-fold × 2-repeat stratified outer CV；每個 outer train 內 3-fold inner CV 比較六個候選設定。沒有另宣稱一份未參與開發的 external test。',
         '選模：inner ROC-AUC − 0.25 × Brier；先選每個 family 的參數，再選 family。Headline 評估 nested selection policy；不是 final full-cohort model 的外部成績。',
@@ -119,35 +118,25 @@ def make_evidence():
     page = '''<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VesselRisk | Track A review package</title><style>
     *{box-sizing:border-box}body{margin:0;background:#f3f7f9;color:#19384b;font:15px/1.75 system-ui,"Microsoft JhengHei",sans-serif}header{background:#143345;color:#fff;padding:48px max(24px,calc((100vw - 1200px)/2))}header h1{font-size:38px;margin:8px 0}header p{color:#b5cfd9;max-width:920px}.weights{font:13px ui-monospace,monospace;color:#7ed2c4}main{max-width:1250px;margin:auto;padding:32px 24px 80px}h2{font-size:23px;margin:28px 0 12px}h3{font-size:18px}.note{border-left:4px solid #16998e;padding:16px 20px;background:#e6f3f0}.warning{border-color:#ce8b54;background:#fff3e7}a{color:#117f83}img{width:100%;display:block;border-radius:6px}figure{margin:0}figcaption{padding:12px 0;font-size:13px;color:#5d7786}section{margin:30px 0}.table-wrap{overflow-x:auto;background:white;border:1px solid #d9e5eb}table{border-collapse:collapse;width:100%;font:13px/1.5 ui-monospace,monospace}th,td{padding:12px;text-align:left;border-bottom:1px solid #e0e9ee;white-space:nowrap}th{font-family:system-ui,sans-serif;background:#edf4f6}.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:start}.links{display:flex;flex-wrap:wrap;gap:12px 24px;margin:20px 0}li{margin:9px 0}.small{font-size:13px;color:#6b8390}@media(max-width:800px){.gallery{grid-template-columns:1fr 1fr}header h1{font-size:29px}}@media(max-width:520px){.gallery{grid-template-columns:1fr}}
     </style><header><div class="weights">PREDICTION 30% / 3D 25% / INTERPRETABILITY 20% / INTEGRATION 15% / TECHNICAL 10%</div><h1>VesselRisk：Track A 審查入口</h1><p>先看實際產品，再看完整數字與方法。此頁可離線開啟；它不是自評獎項或宣稱第一名。</p></header><main>
-    <div class="links"><a href="visual-polish/index.html">UI before / after</a><a href="../docs/VISUAL_POLISH.md">Visual polish review / rollback</a><a href="../README.md">完整 README / run</a><a href="COMPLETION_SUMMARY.md">Completion summary</a><a href="../docs/FINAL_AUDIT_RESULTS.md">Final audit / model investigation</a><a href="../docs/DEVPOST_COPY.md">Devpost draft</a><a href="MODEL_RESULTS.csv">完整數字 CSV</a><a href="MODEL_RESULTS.json">完整數字 JSON</a><a href="../report/VesselRisk-Track-A.pdf">六頁 report</a><a href="../demo/DEMO_SCRIPT.md">Demo script</a></div>
-    <p class="note">四模型 + 55 輸入 + 真實 3D + SHAP + Evidence Lab 已同步可靠性實驗、輸入來源與完整性驗證。測試、解壓驗證與版本範圍見 BUILD_VALIDATION.json。ZIP 包含 production build、models、assets、lockfiles 與 build/run 設定。</p>
+    <div class="links"><a href="../README.md">完整 README / run</a><a href="COMPLETION_SUMMARY.md">Completion summary</a><a href="../docs/FINAL_AUDIT_RESULTS.md">Final audit / model investigation</a><a href="../docs/DEVPOST_COPY.md">Devpost draft</a><a href="MODEL_RESULTS.csv">完整數字 CSV</a><a href="MODEL_RESULTS.json">完整數字 JSON</a><a href="../report/VesselRisk-Track-A.pdf">六頁 report</a><a href="../demo/DEMO_NARRATION_EN.md">English demo narration</a></div>
+    <p class="note">四模型 + 55 輸入 + 真實 3D + SHAP + Model evidence 已同步可靠性實驗、輸入來源與完整性驗證。測試、解壓驗證與版本範圍見 BUILD_VALIDATION.json。ZIP 包含可建置原始碼、models、assets、lockfiles 與 build/run 設定；執行 --setup 安裝依賴並在本機建置前端。</p>
     <h2>01 / 先看主畫面</h2><a href="screenshots/01-dashboard.png"><img src="screenshots/01-dashboard.png" alt="Actual VesselRisk dashboard"></a>
     <p class="small">實際 held-out mixed-vessel case：CAD 94.9%、LAD 90.4%、LCX 17.7%、RCA 18.6%。這是示範病例，不是平均驗證表現。點圖片看原尺寸。</p>
     <h2>02 / 產品各狀態</h2><div class="gallery">''' + photos + '''</div>
     <p class="note warning">0.50 基準的 LCX／RCA recall 是 0.420／0.395；training-only F1 research cutoffs 提高至 0.840／0.868，代價是更多 false positives、較低 precision／accuracy。兩種 operating point 均完整列出。303 人單中心 cohort，沒有外部 clinical validation；CI 不含重訓／選模 uncertainty。3D 是 generic anatomy，不是病人 scan 或 lesion localization。</p>
     <h2>03 / 真實數字</h2><p>下列 headline scores 評估 repeated nested selection policy；deployed family 在全 cohort 另做 inner selection。不可將表中的 AUC 當作 final model 的 external-test 成績。PR-AUC 使用 average precision。</p>''' + ''.join(sections) + '''
     <h2>04 / 最後的 ML methodology</h2><ol>''' + ''.join(f'<li>{html.escape(m)}</li>' for m in methods) + '</ol><h2>05 / 3D 的實際做法</h2><p>' + html.escape(anatomy_text) + '</p><p>' + html.escape(risk_text) + '''</p>
-    <h2>06 / 完成狀態與尚未驗證</h2><p>核心本機產品、訓練／evaluation artifacts、解釋、3D、Evidence Lab、report／demo script 與驗證已完成。<strong>Docker 執行未驗證</strong>（主機無 Docker）；尚未 remote deployment、final demo recording／YouTube upload、competition submission。Author／team／public links 與最後說法需提交者 review。</p>
+    <h2>06 / 完成狀態與尚未驗證</h2><p>核心本機產品、訓練／evaluation artifacts、解釋、3D、Model evidence、report／demo script 與驗證已完成。<strong>Docker 執行未驗證</strong>（主機無 Docker）；尚未 remote deployment、final demo recording／YouTube upload、competition submission。Author／team／public links 與最後說法需提交者 review。</p>
     <p>Run：專案根目錄 <code>python scripts/start.py --setup</code>；之後 <code>python scripts/start.py</code>。開 <a href="http://127.0.0.1:3000">http://127.0.0.1:3000</a>。Python 3.13 + Node.js 24 建議；不需 API key 或重訓。</p><p class="small">研究／教育用途，不是 diagnosis、treatment advice 或外部驗證 clinical screening。OpenAI Codex 協助研究、實作、驗證與文案；模型結果從 supplied workbook 實際計算。</p></main></html>'''
     (REVIEW / 'index.html').write_text(page, encoding='utf-8')
 
 
 def package():
     OUTPUT.mkdir(exist_ok=True)
-    excluded_dirs = {'.git', '.venv', 'node_modules', '__pycache__', '.pytest_cache', 'tmp', 'submission'}
-    excluded_paths = {'web/.next/cache', 'web/.next/dev', 'web/test-results', 'web/playwright-report'}
-    files = []
-    for directory, dirs, names in os.walk(ROOT):
-        dirs[:] = sorted(d for d in dirs if d not in excluded_dirs and (Path(directory) / d).relative_to(ROOT).as_posix() not in excluded_paths)
-        for name in sorted(names):
-            if name.startswith('.env') or name.endswith(('.pyc', '.log', '.tsbuildinfo', '.checkpoint.joblib', '.checkpoint.joblib.tmp')) or name == 'evidence.partial.json':
-                continue
-            path = Path(directory) / name
-            if path == REVIEW / 'FILE_MANIFEST.json':
-                continue
-            files.append(path)
+    files = collect_files(ROOT)
+    validate_required(p.relative_to(ROOT).as_posix() for p in files)
     manifest = [{'path': p.relative_to(ROOT).as_posix(), 'bytes': p.stat().st_size, 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]
-    write_json(REVIEW / 'FILE_MANIFEST.json', {'root': 'VesselRisk', 'files': manifest, 'note': 'Every packaged file except this self-referential manifest; CRC also verified across the complete archive.', 'excluded': sorted(excluded_dirs | excluded_paths) + ['env files', 'logs', 'bytecode', 'tsbuildinfo', 'training checkpoints']})
+    write_json(REVIEW / 'FILE_MANIFEST.json', {'root': 'VesselRisk', 'files': manifest, 'note': 'Portable source package. Run python scripts/start.py --setup to install dependencies and build locally. Every packaged file except this self-referential manifest is hashed.', 'excluded': sorted(EXCLUDED_DIRS | EXCLUDED_FILES) + ['local references', 'historical UI snapshots', 'test screenshots', 'env files', 'logs', 'bytecode', 'training checkpoints']})
     files.append(REVIEW / 'FILE_MANIFEST.json')
     archive = OUTPUT / 'VesselRisk-Track-A-review.zip'
     with ZipFile(archive, 'w', compression=ZIP_DEFLATED, compresslevel=6) as zipped:
@@ -156,11 +145,12 @@ def package():
     with ZipFile(archive) as zipped:
         assert zipped.testzip() is None
         names = set(zipped.namelist())
-        required = ['web/package-lock.json', 'web/.next/BUILD_ID', 'web/.next/required-server-files.json', 'web/Dockerfile', 'api/main.py', 'ml/train.py', 'ml/artifacts/CAD.joblib', 'ml/artifacts/LAD.joblib', 'ml/artifacts/LCX.joblib', 'ml/artifacts/RCA.joblib', 'ml/artifacts/evidence.json', 'web/public/anatomy/heart.bin', 'README.md', 'compose.yaml', 'scripts/start.py', 'tests/test_validity.py', '.github/workflows/verify.yml', 'report/VesselRisk-Track-A.pdf', 'review/index.html', 'review/COMPLETION_SUMMARY.md']
-        assert all('VesselRisk/' + p in names for p in required), 'Missing core deliverable'
+        validate_required(n.removeprefix('VesselRisk/') for n in names)
         reliability_required = ['ml/artifacts/integrity.json', 'ml/integrity.py', 'ml/reliability.py', 'ml/reproducibility.py', 'experiments/reliability/results.json', 'docs/RELIABILITY_AUDIT.md', 'tests/test_reliability.py', 'web/components/ReliabilityDetails.tsx', 'web/lib/input-provenance.ts', 'web/e2e/reliability.spec.ts', 'review/BUILD_VALIDATION.json']
         assert all('VesselRisk/' + p in names for p in reliability_required), 'Missing reliability deliverable'
-        assert sum(n.startswith('VesselRisk/review/screenshots/') and n.endswith('.png') for n in names) == 10
+        assert sum(n.startswith('VesselRisk/review/screenshots/') and n.endswith('.png') for n in names) == 11
+        ui_required = ['web/components/HeartViewer.module.css', 'web/components/ModelEvidenceOverview.tsx', 'web/components/ModelEvidence.module.css', 'web/components/WorkspaceAnalytics.tsx', 'web/lib/target-colors.ts', 'review/screenshots/11-model-evidence-overview.png']
+        assert all('VesselRisk/' + p in names for p in ui_required), 'Missing current UI deliverable'
         for item in manifest:
             data = zipped.read('VesselRisk/' + item['path'])
             assert hashlib.sha256(data).hexdigest() == item['sha256']

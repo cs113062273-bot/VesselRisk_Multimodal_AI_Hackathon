@@ -99,7 +99,7 @@ Generated deliverables: refreshed report, demo/review screenshots, review hub/ma
 
 ## Final score estimate and why not 100
 
-**Previous numerical self-rating withdrawn (2026-10-09).** The earlier 91/100 estimate, including 24/25 for 3D, over-weighted functional completeness and verification. It did not establish near-perfect clarity or interaction quality. The official rubric supplies category weights, not a deterministic point formula. Use the implementation evidence and stated limitations below; no replacement numerical score or competition ranking is claimed. The subsequent interface improvements are documented in `VISUAL_INTERACTION.md`.
+**Previous numerical self-rating withdrawn (2026-10-09).** The earlier 91/100 estimate, including 24/25 for 3D, over-weighted functional completeness and verification. It did not establish near-perfect clarity or interaction quality. The official rubric supplies category weights, not a deterministic point formula. Use the implementation evidence and stated limitations below; no replacement numerical score or competition ranking is claimed. The current interface and delivered features are documented in `../README.md`.
 
 LCX/RCA remain only moderately discriminative; their default recall is weak. The evidence comes from 303 referral patients, not independent validation. Approximate SHAP, coarse/reference anatomy, a compact UI that needs readable recording zoom, and unvalidated uncertainty/OOD heuristics can still cost points. A better-performing rigorously evaluated rival could win. Native production and software WebGL were exercised; Docker execution remains unverified.
 

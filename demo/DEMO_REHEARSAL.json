@@ -1,0 +1,106 @@
+{
+  "checked_at": "2026-10-12T11:26:04.046Z",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "method": "Headless desktop Chromium against existing real localhost frontend/API. No mocks, model refitting, video recording or TTS synthesis.",
+  "checks": [
+    {
+      "name": "example_115_identity",
+      "status": "passed"
+    },
+    {
+      "name": "all_55_ui_fields",
+      "status": "passed",
+      "count": 55
+    },
+    {
+      "name": "search_and_reset",
+      "status": "passed"
+    },
+    {
+      "name": "example_prediction",
+      "status": "passed",
+      "seconds": 3.5682628,
+      "mode": "held-out demonstration",
+      "case_id": "115",
+      "probabilities": {
+        "CAD": 0.9820544150776735,
+        "LAD": 0.5145581405631764,
+        "LCX": 0.4933920912425386,
+        "RCA": 0.4930741553148974
+      },
+      "ood": {
+        "flag": false,
+        "nearest_distance": 3.4769847481860476,
+        "reference_threshold": 9.381826306182614,
+        "outside_features": [],
+        "method": "Standardized mixed-feature nearest-neighbor distance; heuristic, not validated detector"
+      }
+    },
+    {
+      "name": "anatomy_controls_popovers_and_all_contributions",
+      "status": "passed"
+    },
+    {
+      "name": "custom_identity_defaults",
+      "status": "passed"
+    },
+    {
+      "name": "bmi_and_empty_height_validation",
+      "status": "passed"
+    },
+    {
+      "name": "backend_invalid_age_and_recovery",
+      "status": "passed"
+    },
+    {
+      "name": "manual_custom_prediction_and_ood",
+      "status": "passed",
+      "seconds": 1.5083865000000005,
+      "mode": "new profile",
+      "case_id": null,
+      "probabilities": {
+        "CAD": 0.8705996237801331,
+        "LAD": 0.30396720784455367,
+        "LCX": 0.37880699616305824,
+        "RCA": 0.4754902548955977
+      },
+      "ood": {
+        "flag": true,
+        "nearest_distance": 4.833958676818453,
+        "reference_threshold": 9.381826306182614,
+        "outside_features": [
+          "Age"
+        ],
+        "method": "Standardized mixed-feature nearest-neighbor distance; heuristic, not validated detector"
+      }
+    },
+    {
+      "name": "custom_export_exact_values_and_origins",
+      "status": "passed"
+    },
+    {
+      "name": "overview_validation_curves_calibration_thresholds_folds",
+      "status": "passed"
+    },
+    {
+      "name": "global_and_local_explanation_evidence",
+      "status": "passed"
+    },
+    {
+      "name": "subgroups_ablations_failures_limits",
+      "status": "passed"
+    },
+    {
+      "name": "provenance_leakage_registry_manifest",
+      "status": "passed"
+    },
+    {
+      "name": "scope_report_evidence_export_and_return",
+      "status": "passed"
+    }
+  ],
+  "browser_errors": []
+}

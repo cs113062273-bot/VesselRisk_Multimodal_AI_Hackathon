@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Evidence, pct, score, Target, TARGETS, VesselRefinement } from '@/lib/types';
+import { targetColorStyle } from '@/lib/target-colors';
 
 export function TargetOverview({ evidence, target, onTarget }: {
   evidence: Evidence; target: Target; onTarget: (target: Target) => void;
@@ -23,7 +24,7 @@ export function TargetOverview({ evidence, target, onTarget }: {
       const ev = evidence.targets[t];
       const value = auc ? ev.metrics.roc_auc : ev.metrics.recall;
       const [low, high] = ev.auc_ci;
-      return <button key={t} className="overview-row" aria-label={`Inspect ${t} validation`} aria-describedby={`overview-value-${t}`} aria-pressed={target === t} onClick={() => onTarget(t)}>
+      return <button key={t} className="overview-row" style={targetColorStyle(t)} aria-label={`Inspect ${t} validation`} aria-describedby={`overview-value-${t}`} aria-pressed={target === t} onClick={() => onTarget(t)}>
         <strong>{t}</strong>
         <span className={`overview-track ${auc ? 'auc-track' : 'recall-track'}`} aria-hidden="true">
           {auc ? <><i className="chance-line"/><i className="overview-interval" style={{ left: `${low * 100}%`, width: `${(high - low) * 100}%` }}/><i className="overview-dot" style={{ left: `${value * 100}%` }}/></> : <i className="overview-fill" style={{ width: `${value * 100}%` }}/>}</span>

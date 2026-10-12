@@ -152,9 +152,13 @@ function VesselAnchors({items,labels,connectors,selected,layoutVersion}:{items:L
 export default function HeartViewer({prediction,previousPrediction,predictionUpdatedAt,target,focusVersion,dirty,initialOrbit,onOpened,onSelect}:{prediction:Prediction|null;previousPrediction:Prediction|null;predictionUpdatedAt:number;target:Target;focusVersion:number;dirty:boolean;initialOrbit:boolean;onOpened:()=>void;onSelect:(v:Target)=>void}){
   const [loaded,setLoaded]=useState<Loaded[]>([]);
   const [error,setError]=useState('');
-  const [spin,setSpin]=useState(initialOrbit);
+  const [orbit,setOrbit]=useState({enabled:initialOrbit,focusVersion,predictionUpdatedAt});
+  // A new successful prediction starts orbit once; remounting uses the current
+  // prediction timestamp so returning from model evidence does not replay it.
+  if(orbit.predictionUpdatedAt!==predictionUpdatedAt){
+    setOrbit({enabled:true,focusVersion,predictionUpdatedAt});
+  }
   useEffect(()=>{onOpened();},[onOpened]);
-  const [spinVersion,setSpinVersion]=useState(0);
   const [xray,setXray]=useState(false);
   const [isolate,setIsolate]=useState(false);
   const [reset,setReset]=useState(0);
@@ -189,8 +193,8 @@ export default function HeartViewer({prediction,previousPrediction,predictionUpd
   useEffect(()=>()=>{loaded.forEach(x=>x.geometry.dispose());document.body.style.cursor='auto';},[loaded]);
   useEffect(()=>{if(!full)return;const handler=(e:KeyboardEvent)=>{if(e.key==='Escape')setFull(false);};window.addEventListener('keydown',handler);return ()=>window.removeEventListener('keydown',handler);},[full]);
   const labelParts=useMemo(()=>loaded.filter(x=>['FJ2631','FJ2649','FJ2723'].includes(x.part.id)),[loaded]);
-  const choose=(v:Target)=>{setSpin(false);onSelect(v);};
-  const rotating=spin&&spinVersion===focusVersion;
+  const choose=(v:Target)=>{setOrbit({enabled:false,focusVersion,predictionUpdatedAt});onSelect(v);};
+  const rotating=orbit.enabled&&orbit.focusVersion===focusVersion;
   const selected=target==='CAD'?null:target;
   const activeRisk=prediction?.targets[target];
   const guide=selected?ARTERY_GUIDE[selected]:null;
@@ -233,7 +237,7 @@ export default function HeartViewer({prediction,previousPrediction,predictionUpd
       })}
       <div className="view-caption">Drag to rotate · Scroll to zoom · Click a vessel</div>
     </div>
-    <div className="viewer-controls"><button onClick={()=>{setSpin(!rotating);setSpinVersion(focusVersion);}} aria-pressed={rotating}>{rotating?<Pause size={15}/>:<Play size={15}/>}<span>{rotating?'Pause':'Orbit'}</span></button><button onClick={()=>setXray(!xray)} aria-pressed={xray}><Layers size={15}/><span>X-ray</span></button><button onClick={()=>setIsolate(!isolate)} aria-pressed={isolate}><Focus size={15}/><span>Vessels only</span></button><button onClick={()=>{setReset(v=>v+1);setSpin(false);setResetVersion(focusVersion);}}><RotateCcw size={15}/><span>Reset</span></button></div>
+    <div className="viewer-controls"><button onClick={()=>setOrbit({enabled:!rotating,focusVersion,predictionUpdatedAt})} aria-pressed={rotating}>{rotating?<Pause size={15}/>:<Play size={15}/>}<span>{rotating?'Pause':'Orbit'}</span></button><button onClick={()=>setXray(!xray)} aria-pressed={xray}><Layers size={15}/><span>X-ray</span></button><button onClick={()=>setIsolate(!isolate)} aria-pressed={isolate}><Focus size={15}/><span>Vessels only</span></button><button onClick={()=>{setReset(v=>v+1);setOrbit({enabled:false,focusVersion,predictionUpdatedAt});setResetVersion(focusVersion);}}><RotateCcw size={15}/><span>Reset</span></button></div>
     <div className="color-key" aria-label="Probability display bands, not clinical risk categories"><span>Probability</span><span><i style={{background:riskColor(0)}}/>&lt;30%</span><span><i style={{background:riskColor(.3)}}/>30–&lt;60%</span><span><i style={{background:riskColor(.6)}}/>≥60%</span></div>
     <p className="anatomy-note">Reference anatomy · Color shows probability, not blockage severity</p>
     <a className="anatomy-credit" href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html" target="_blank" rel="noreferrer">BodyParts3D / DBCLS · CC BY 4.0</a>

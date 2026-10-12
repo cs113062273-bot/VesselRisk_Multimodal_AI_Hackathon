@@ -1,5 +1,7 @@
 ## First-opening orbit and status cleanup
 
+> Historical implementation/verification record. The current desktop-only UI, renamed Model evidence and validation scope are documented in `review/COMPLETION_SUMMARY.md` and `review/BUILD_VALIDATION.json`; older layouts and test counts below are not current-version claims.
+
 Removed the prediction-status strip beneath the heart, including its unused styles and icon. Prediction completion is visible through populated estimates and the enabled export action; dirty and busy explanations remain in the explanation panel. Orbit starts only on the first workspace mount in a page session. Target selection, Reset and returning from Evidence Lab do not restart it. Manual Orbit remains available.
 
 ## Consistent camera scale and credit placement

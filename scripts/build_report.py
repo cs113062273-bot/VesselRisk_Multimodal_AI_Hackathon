@@ -148,7 +148,7 @@ def build():
     registry=json.loads((ROOT/'ml/artifacts/registry.json').read_text(encoding='utf-8'))
     targets=evidence['targets'];r=Report()
     r.begin('01 / Product & objective','Coronary risk, made visible.','Four calibrated clinical predictions, independently mapped to real coronary anatomy and explained by patient-level evidence.')
-    r.par('VesselRisk connects <b>structured patient inputs → four trained classifiers → calibrated probabilities → interpretable 3D coronary anatomy</b>. A horizontal patient profile sits above the heart, explanation and risk analytics. Evidence Lab exposes validation, calibration, failures, explanation sensitivity and provenance.',space=15)
+    r.par('VesselRisk connects <b>structured patient inputs → four trained classifiers → calibrated probabilities → interpretable 3D coronary anatomy</b>. Patient workspace presents the current profile, anatomy, signed contributions and model disagreement. Model evidence separately exposes the fixed training workflow, validation, calibration, failures and provenance; patient edits do not change those results.',space=15)
     screenshot=ROOT/'demo/screenshots/patient-workspace.png'
     if not screenshot.exists():raise RuntimeError('Run the browser demo checks to generate final screenshots first')
     r.image(screenshot,height=270)
@@ -184,7 +184,7 @@ def build():
         r.c.setFillColor(color);r.c.circle(M+4+i*110,r.y,3,fill=1,stroke=0);r.c.setFont('Helvetica',8);r.c.drawString(M+13+i*110,r.y-3,t)
     r.y-=19
     skills = '; '.join(f'{t} {reliability["targets"][t]["probability"]["brier_skill"]*100:.1f}%' for t in targets)
-    r.par(f'<b>Probability quality:</b> Brier error reduction versus training-fold prevalence: {skills}. Evidence Lab adds group counts, descriptive Wilson intervals, conditional Brier intervals and separate-repeat scores. Intervals exclude refitting/selection uncertainty.',size=7.5,color=MUTED,space=8)
+    r.par(f'<b>Probability quality:</b> Brier error reduction versus training-fold prevalence: {skills}. Model evidence adds group counts, descriptive Wilson intervals, conditional Brier intervals and separate-repeat scores. Intervals exclude refitting/selection uncertainty.',size=7.5,color=MUTED,space=8)
     refinement=json.loads((ROOT/'experiments/vessel_refinement/results.json').read_text(encoding='utf-8'))
     if (refinement['baseline_evidence_sha256']!=hashlib.sha256((ROOT/'ml/artifacts/evidence.json').read_bytes()).hexdigest()
             or refinement['baseline_registry_sha256']!=hashlib.sha256((ROOT/'ml/artifacts/registry.json').read_bytes()).hexdigest()):
@@ -210,7 +210,7 @@ def build():
     r.heading('Three complementary limits on confidence')
     r.table([['Signal','Meaning and limitation'],['Candidate disagreement','Probability spread across three families exposes sensitivity to model choice. Not a confidence interval.'],['Refitted model range','Min/max of ten outer models; demo uses two excluding that patient. Descriptive; may omit the full-cohort estimate.'],['Profile representation','Standardized mixed-feature nearest-neighbor distance, cohort leave-one-out 95th percentile + single-feature range checks. Unvalidated heuristic.']],widths=[130,379],size=8)
     r.heading('Inspect failures, not only successes')
-    r.par('Evidence Lab exposes sex/age subgroups, eight largest held-out errors per target and fixed-logistic 5-fold ECG/laboratory-echo ablations. Small samples support descriptive checks; the original conflicting source labels are retained.')
+    r.par('Model evidence exposes sex/age subgroups, eight largest held-out errors per target and fixed-logistic 5-fold ECG/laboratory-echo ablations. Small samples support descriptive checks; the original conflicting source labels are retained.')
     r.par('<b>Boundary:</b> editing inputs explores model response, not treatment effect. Independent CAD/vessel classifiers may disagree. Attribution does not establish causality or clinical validity.',size=8.5,color=MUTED)
     r.end()
 
@@ -219,13 +219,13 @@ def build():
     r.par('Actual interactive viewer. Heart-wall meshes, great vessels and independently selectable coronary branches are loaded locally; no asset network dependency during the demo.',size=7.5,color=MUTED)
     r.table([['Vessel mapping','Source geometry / identity'],['LAD','Anterior interventricular / anterior descending branches; trunk FJ2631'],['LCX','Circumflex branches of left coronary artery; FJ2649-FJ2654'],['RCA','Right coronary artery trunk and branches; trunk FJ2723']],widths=[110,399],size=8)
     r.par('<b>Asset:</b> BodyParts3D 4.0, DBCLS, CC BY 4.0; pinned human-atlas derivative. 63 meshes, 37,444 triangles, 1,071,048 bytes. Selected, recentered and uniformly scaled; source names/IDs retained. Generic adult male anatomy, not a patient image. No RWMA-to-lesion mapping or geometry deformation.')
-    r.par('<b>Interaction:</b> rotate, zoom, pan, select vessel, orbit, X-ray, vessel isolation, reset and expanded view. Artery colors use model probabilities; projected labels connect to artery surface vertices. The artery guide explains typical course and supply, not patient injury. The renderer limits pixel ratio to 1.5. Software WebGL browser tests exercise the interface without a dedicated GPU; universal FPS is not claimed.')
+    r.par('<b>Interaction:</b> rotate, zoom, pan, select, orbit, X-ray, isolation, reset and expand. Surface-anchored labels show each artery probability and avoid overlap. A faint selected-vessel silhouette reveals occluded geometry. New predictions animate colors and briefly show changes from the previous prediction, not treatment effects. Orbit starts only on first opening. Pixel ratio is capped at 1.5; software WebGL checks do not establish universal FPS.')
     r.par('<b>System path:</b> Next.js clinical form → validated FastAPI request → calibrated CAD/LAD/LCX/RCA models → SHAP/uncertainty/OOD → probability, anatomy and explanation updates. Edits mark previous results stale and block exports; failures preserve results for retry. Input origins distinguish cohort records, defaults, user entries, imports and derived BMI; exports snapshot origins with exact values.')
     r.end()
 
     r.begin('06 / Reproducibility, usage & limits','Ready to run and review.','The software, model weights and evidence run locally without cloud credentials or inference APIs.')
     r.heading('Run the complete system')
-    r.par('Python 3.13 and Node 24 recommended. First run: <font name="Courier">python scripts/start.py --setup</font>. Subsequent launches: <font name="Courier">python scripts/start.py</font>. Open <b>http://127.0.0.1:3000</b>. Select a held-out case → Predict → select vessels → inspect explanations → Evidence Lab. Optional Docker Compose packaging is supplied; Docker execution was not verified on this host.',size=9)
+    r.par('Python 3.13 and Node 24 recommended. First run: <font name="Courier">python scripts/start.py --setup</font>. Subsequent launches: <font name="Courier">python scripts/start.py</font>. Open <b>http://127.0.0.1:3000</b>. Select a held-out case → Predict → select vessels → inspect explanations → Model evidence. Optional Docker Compose packaging is supplied; Docker execution was not verified on this host.',size=9)
     r.table([['Reproduce / inspect','Command or artifact'],['Train and pair vessel audit','python -m ml.train (seed 2026; 5 x 2 outer folds)<br/>python -m ml.refine_vessels'],['Verify frozen OOF results','python -m ml.evaluate → experiments/metrics.csv'],['Critical validity checks','python -m pytest'],['Frontend checks','cd web; npm run typecheck; npm run lint; npm run build'],['Browser demo reliability','cd web; npx playwright install chromium; npx playwright test'],['Scientific artifacts','ml/artifacts/{CAD,LAD,LCX,RCA}.joblib; evidence.json; registry.json'],['Submission materials','README; data/model card; licenses; screenshots; five-minute demo script']],widths=[145,364],size=7.5)
     r.par('<b>Reliability:</b> checkpoint reuse fingerprints data, code, schema, seed, repeats and Python/dependency versions. API verifies all models, OOD, evidence, registry and schema before deserialization. Desktop Chromium integration tests run in CI. Reproduce sensitivity: <font name="Courier">python -m ml.reliability</font>; details: docs/RELIABILITY_AUDIT.md.',size=8,space=9)
     r.heading('Scope and limitations')

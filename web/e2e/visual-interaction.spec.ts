@@ -3,27 +3,29 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { NAMES } from '../lib/types';
 
-test('orbit starts on first opening and stops after target selection without restarting on return', async ({ page }) => {
+test('orbit starts on opening and successful predictions, stops on selection and stays stopped on return', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('canvas')).toBeVisible();
   await expect(page.locator('.prediction-status')).toHaveCount(0);
-  const label = page.getByRole('button', { name: 'Select LCX in 3D' });
-  const before = await label.boundingBox();
-  await expect.poll(async () => {
-    const after = await label.boundingBox();
-    return Math.hypot(after!.x - before!.x, after!.y - before!.y);
-  }).toBeGreaterThan(5);
-  await page.locator('.explanation-panel').getByRole('tab', { name: 'LAD', exact: true }).click();
+  await page.getByRole('combobox', { name: 'View prediction target' }).selectOption('LAD');
   await expect(page.getByRole('button', { name: 'Orbit', exact: true })).toHaveAttribute('aria-pressed', 'false');
   for (const target of ['CAD', 'LCX', 'RCA', 'LAD']) {
     await page.getByRole('combobox', { name: 'View prediction target' }).selectOption(target);
     await expect(page.getByRole('button', { name: 'Orbit', exact: true })).toHaveAttribute('aria-pressed', 'false');
   }
-  await page.getByRole('button', { name: 'Orbit', exact: true }).click();
+  const predict = async () => {
+    const response = page.waitForResponse(r => r.url().endsWith('/api/predict') && r.request().method() === 'POST');
+    await page.getByRole('button', { name: 'Predict coronary risk', exact: true }).click();
+    expect((await response).ok()).toBe(true);
+    await expect(page.getByRole('button', { name: 'Pause', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  };
+  await predict();
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   await page.locator('.explanation-panel').getByRole('tab', { name: 'RCA', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Orbit', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Expand patient profile' }).click();
+  await predict();
   await page.getByRole('button', { name: 'Model evidence', exact: true }).click();
   await page.getByRole('button', { name: 'Patient workspace', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Orbit', exact: true })).toHaveAttribute('aria-pressed', 'false');

@@ -1,9 +1,10 @@
 'use client';
 import type { ReactNode } from 'react';
-import { ArrowDownRight, ArrowUpRight, Info, ShieldCheck } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Info } from 'lucide-react';
 import { NAMES, pct, Prediction, Risk, Target, TARGETS } from '@/lib/types';
 import { measurementText } from '@/lib/clinical-display';
 import InfoPopover from './InfoPopover';
+import { TARGET_COLORS } from '@/lib/target-colors';
 
 export function Contributors({risk,all=false}:{risk:Risk;all?:boolean}) {
   const items=risk.explanation.contributions.slice(0,all?55:5);
@@ -20,10 +21,10 @@ export function Contributors({risk,all=false}:{risk:Risk;all?:boolean}) {
 
 export default function ExplanationPanel({prediction,target,onTarget,latency,dirty,busy,children}:{prediction:Prediction|null;target:Target;onTarget:(t:Target)=>void;latency:number|null;dirty:boolean;busy:boolean;children?:ReactNode}) {
   const risk=prediction?.targets[target];
-  return <aside className={`explanation-panel ${dirty&&prediction?'explanation-stale':''}`} id="prediction-explanation" tabIndex={-1} aria-label="Prediction explanation">
-    <div className="panel-title"><ShieldCheck size={18}/><h2>Patient prediction</h2></div>
+  return <aside className={`explanation-panel ${!prediction?'explanation-unpredicted':''} ${dirty&&prediction?'explanation-stale':''}`} id="prediction-explanation" tabIndex={-1} aria-label="Prediction explanation">
+    <div className="panel-title"><h2>Coronary Risk Prediction</h2></div>
     {prediction&&dirty&&<div className="stale-explanation" role="status"><Info size={16}/><span><strong>{busy?'Updating explanation…':'Previous explanation'}</strong>Based on the last prediction. Edited inputs have not been applied.</span></div>}
-    <div className="target-tabs" role="tablist" aria-label="Explanation target">{TARGETS.map(t=><button role="tab" aria-label={t} aria-selected={target===t} key={t} onClick={()=>onTarget(t)}><span>{t}</span><strong className={`target-probability ${prediction?(prediction.targets[t].probability<.3?'decrease':prediction.targets[t].probability<.6?'mid-probability':'increase'):''}`}>{prediction?(prediction.targets[t].probability*100).toFixed(1):'—'}{prediction&&<small>%</small>}</strong></button>)}</div>
+    <div className="target-tabs" role="tablist" aria-label="Explanation target">{TARGETS.map(t=><button role="tab" aria-label={t} aria-selected={target===t} key={t} onClick={()=>onTarget(t)}><span style={{color:TARGET_COLORS[t].ink}}>{t}</span><strong className={`target-probability ${prediction?(prediction.targets[t].probability<.3?'decrease':prediction.targets[t].probability<.6?'mid-probability':'increase'):''}`}>{prediction?(prediction.targets[t].probability*100).toFixed(1):'—'}{prediction&&<small>%</small>}</strong></button>)}</div>
     {!risk?<div className="explanation-empty"><h3>Start with a patient.</h3><ol className="first-look-steps">
       <li><span>01</span><div><strong>Predict</strong><p>Use the loaded case or enter your measurements.</p></div></li>
       <li><span>02</span><div><strong>Explore the heart</strong><p>Select an artery to bring it into view.</p></div></li>
@@ -42,7 +43,11 @@ export default function ExplanationPanel({prediction,target,onTarget,latency,dir
       <Contributors risk={risk}/>
       {prediction?.ood.flag&&<div className="representation flagged"><Info size={16}/><div><strong>Unusual patient profile</strong><p>These measurements differ from the training cohort. Estimates may be less reliable.</p></div></div>}
       {children}
-      <details className="model-details"><summary>All 55 inputs & calculation details</summary>
+      <details className="model-details"><summary onClick={event=>{
+        if(event.currentTarget.parentElement?.hasAttribute('open'))return;
+        const panel=event.currentTarget.closest<HTMLElement>('.explanation-panel');
+        if(panel)panel.style.setProperty('--expanded-panel-height',`${panel.getBoundingClientRect().height}px`);
+      }}>All 55 inputs & calculation details</summary>
         <Contributors risk={risk} all/>
         <dl className="model-facts"><dt>Model</dt><dd>{risk.family}</dd><dt>Calibration</dt><dd>Sigmoid</dd><dt>Research cutoff</dt><dd>{(risk.threshold*100).toFixed(0)}%</dd><dt>Result source</dt><dd>{prediction?.mode}</dd><dt>Response</dt><dd>{latency??'—'} ms · {prediction?.version}</dd></dl>
         <p>{prediction?.case_id?'This dataset patient was excluded from this model’s training.':'This profile uses a model fitted on the full cohort.'}</p>

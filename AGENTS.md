@@ -11,6 +11,6 @@
 - Do not automatically scroll or move focus after a prediction.
 - Keep the patient field scroll area spacious. Do not shrink it to fit the prediction footer into the first screen on shorter desktop windows; the page may scroll to reach the footer.
 
-- Do not restore the prediction-status strip beneath the heart. Auto-orbit runs on the first workspace opening only; selecting a target or returning from Evidence Lab must not restart it.
+- Do not restore the prediction-status strip beneath the heart. Auto-orbit runs on the first workspace opening and after each successful prediction (explicit user update, 2026-10-09); selecting a target or returning from Model evidence must not restart it.
 
 Read the Next.js instructions in `web/AGENTS.md` when changing frontend code.

@@ -15,3 +15,37 @@ ml/artifacts/evidence.partial.json
 .env*
 !.env.example
 track-page-*.png
+
+# Local development references, rollback snapshots and generated delivery files.
+/05f9ed0e-ed4e-4e57-947d-a08442d8f054.png
+/CODEX_MASTER_BRIEF.md
+/instruction.md
+/agent_server.py
+/extention+of+z+alizadeh+sani+dataset.zip
+/qa_original/
+/qa_rapt/
+/rapt_image_cache/
+/submission/
+/review/first-30-seconds/
+/review/visual-polish/
+/review/FILE_MANIFEST.json
+/review/RESEARCH_THRESHOLDS.json
+/docs/EXECUTION_PLAN.md
+/docs/FIRST_30_SECONDS.md
+/docs/VISUAL_INTERACTION.md
+/docs/VISUAL_POLISH.md
+/scripts/capture_first_look.mjs
+/scripts/capture_polish.mjs
+
+# Keep only the current product screenshots, not browser-test captures.
+/demo/screenshots/*
+!/demo/screenshots/patient-workspace.png
+!/demo/screenshots/coronary-anatomy.png
+!/demo/screenshots/focused-lad.png
+!/demo/screenshots/focused-lcx.png
+!/demo/screenshots/focused-rca.png
+!/demo/screenshots/prediction-changes.png
+web/.next-dev/
+
+# User-provided recording references are local preparation assets.
+/image*.png

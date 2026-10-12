@@ -1,5 +1,7 @@
 # Verification record
 
+> Historical implementation/verification record. The current desktop-only UI, renamed Model evidence and validation scope are documented in `review/COMPLETION_SUMMARY.md` and `review/BUILD_VALIDATION.json`; older layouts and test counts below are not current-version claims.
+
 ## Current delivery snapshot, 2026-10-09
 
 The current reliability audit and complete inference integrity checks supersede the earlier counts and UI descriptions below. Current commands, outcomes, screenshot timestamps and extracted-package validation are recorded in `../review/BUILD_VALIDATION.json`. The project now targets desktop only. The six-page report, ten review captures and demonstration script have been synchronized with the current interface; removed outcome-reveal controls are not part of the demonstration. Earlier entries below are historical records.

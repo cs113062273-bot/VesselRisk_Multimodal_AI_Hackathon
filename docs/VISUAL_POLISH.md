@@ -1,5 +1,7 @@
 # VesselRisk — competition-grade visual polish
 
+> Historical implementation/verification record. The current desktop-only UI, renamed Model evidence and validation scope are documented in `review/COMPLETION_SUMMARY.md` and `review/BUILD_VALIDATION.json`; older layouts and test counts below are not current-version claims.
+
 2026-10-02. Scope: presentation, recording legibility and interaction feedback. The existing workspace / Evidence Lab structure, brand, product features and scientific wording remain intact.
 
 ## 1. Visual issues found

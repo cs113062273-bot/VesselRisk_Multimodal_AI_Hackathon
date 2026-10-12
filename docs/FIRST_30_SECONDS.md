@@ -1,5 +1,7 @@
 # VesselRisk: first-visit review
 
+> Historical implementation/verification record. The current desktop-only UI, renamed Model evidence and validation scope are documented in `review/COMPLETION_SUMMARY.md` and `review/BUILD_VALIDATION.json`; older layouts and test counts below are not current-version claims.
+
 Reviewed 2026-10-02 against the supplied first-30-seconds proposal. The current project name is VesselRisk; existing branding, grey form fields and previous visual refinements were preserved.
 
 This is an expert walkthrough using real browser interactions, not a timed study of unfamiliar judges. The time windows below describe the intended order of attention, not guaranteed completion times or prediction latency.

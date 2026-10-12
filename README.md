@@ -2,7 +2,7 @@
 
 **Four coronary predictions. Real 3D anatomy. Inspectable evidence.**
 
-A complete Track A research application: clinical inputs → calibrated CAD/LAD/LCX/RCA estimates → independently selectable coronary artery meshes → exact-probability SHAP explanations. A Model Evidence Lab makes the scientific limits as visible as the results.
+A complete Track A research application: clinical inputs → calibrated CAD/LAD/LCX/RCA estimates → independently selectable coronary artery meshes → exact-probability SHAP explanations. A Model evidence makes the scientific limits as visible as the results.
 
 ![VesselRisk patient workspace](demo/screenshots/patient-workspace.png)
 
@@ -18,7 +18,9 @@ python scripts/start.py --setup
 python scripts/start.py
 ```
 
-Open **http://127.0.0.1:3000**. Use the first case (**54-year-old man, smoker with chest pain**) and click **Predict coronary risk**. Rotate/zoom the heart, select each vessel, inspect its explanation and analytics, then open **Evidence Lab**. **Ctrl+C** stops both services.
+Open **http://127.0.0.1:3000**. Use the first case (**54-year-old man, smoker with chest pain**) and click **Predict coronary risk**. Rotate/zoom the heart, select each vessel, inspect its explanation and analytics, then open **Model evidence**. **Ctrl+C** stops both services.
+
+Downloading this repository as a ZIP is sufficient: extract it, open a terminal in the folder containing this README, and run the first-run command above. Setup requires internet access to download Python/npm dependencies. The source package includes the original workbook, trained models, evaluation evidence and 3D assets; it builds the frontend locally, so no prebuilt `.next` directory is needed.
 
 Development: `python scripts/start.py --dev`. Custom ports: `python scripts/start.py --port 3001 --api-port 8001`. Docker alternative: `docker compose up --build` (configuration supplied; Docker is not installed on the build host, so container execution remains unverified).
 
@@ -40,7 +42,7 @@ On Linux/macOS use `.venv/bin/python` instead. If serving separate processes, ru
 
 - **Patient workspace:** all 55 source-compatible clinical inputs, grouped tabs, JSON import/export, held-out demonstration cases, four real estimates, model comparison, representation warnings and local explanations.
 - **Anatomical viewer:** 63 real BodyParts3D structures, 37,444 triangles, about 1 MB; independently colored LAD/LCX/RCA, rotation, zoom, pan, vessel selection, orbit, X-ray, isolation and expansion. No invented lesion locations.
-- **Evidence Lab:** nested OOF ROC/PR/calibration curves, confusion matrices, complete metrics, candidate comparisons, calibration sensitivity, fold dispersion, conditional intervals, global SHAP and rank stability, subgroup checks, ablations, failure cases, schema/provenance and artifact hashes.
+- **Model evidence:** nested OOF ROC/PR/calibration curves, confusion matrices, complete metrics, candidate comparisons, calibration sensitivity, fold dispersion, conditional intervals, global SHAP and rank stability, subgroup checks, ablations, failure cases, schema/provenance and artifact hashes.
 - **Scientific traceability:** source workbook hash, model hashes, fitted fold artifacts, split indices and all 303 repeat-averaged OOF predictions per target are included.
 
 ## Measured results
@@ -58,7 +60,7 @@ Threshold **0.50** is a research convention, not a clinical operating point. LCX
 
 The supplied workbook has **one contradictory record**: one-based row 94 is Cath Normal but LAD Stenotic. The original labels are retained independently and the discrepancy is reported. The empty second worksheet is ignored. `LAD`, `LCX`, `RCA` and `Cath` are forbidden inputs to **every** model and baseline. A programmatic guard rejects them during fit and inference.
 
-A final bounded vessel experiment retained the original models: expanded ExtraTrees/RBF-SVM search did not pass the predeclared AUC/Brier gate. Training-only nested F1 cutoffs increased **LCX recall/F1 to .840/.641** and **RCA to .868/.631**, with precision .518/.495 and accuracy .630/.617. False positives rose 30→93 / 34→101. These research operating points appear beside the fixed 0.50 results in Evidence Lab; probabilities, AUC/Brier and workspace convention are unchanged. [Full paired results and method](docs/VESSEL_REFINEMENT.md) describe the development limitations.
+A final bounded vessel experiment retained the original models: expanded ExtraTrees/RBF-SVM search did not pass the predeclared AUC/Brier gate. Training-only nested F1 cutoffs increased **LCX recall/F1 to .840/.641** and **RCA to .868/.631**, with precision .518/.495 and accuracy .630/.617. False positives rose 30→93 / 34→101. These research operating points appear beside the fixed 0.50 results in Model evidence; probabilities, AUC/Brier and workspace convention are unchanged. [Full paired results and method](docs/VESSEL_REFINEMENT.md) describe the development limitations.
 
 ## Reproduce the science
 
@@ -74,7 +76,7 @@ python -m pytest        # Scientific validity, leakage, prediction and API check
 
 Training is deterministic under the pinned environment and seed 2026. It uses six predeclared candidate configurations and selection score `inner ROC-AUC - 0.25 × Brier`. It includes raw/sigmoid/isotonic sensitivity analysis and fixed-logistic feature-group ablations. Checkpoints resume only when data, target, seed, schema, repeats, training-source hashes, Python and dependency versions match. Legacy or mismatched checkpoints restart automatically; writes use temporary files followed by replacement. Final submission excludes these intermediates. Restart the API after retraining. API startup checks `integrity.json` against all model bundles, OOD, registry, evidence and schema before deserializing any estimator. Training writes this manifest automatically; `python -m ml.integrity` is an explicit packaging operation for already-trusted files, not a repair for unexplained mismatches.
 
-The additional [reliability audit](docs/RELIABILITY_AUDIT.md) preserves the frozen model weights and headline evidence. It adds calibration group counts, descriptive Wilson intervals, Brier intervals and a training-only prevalence baseline, separate-repeat metrics, and local SHAP seed/computation/background sensitivity on four predefined held-out profiles. Evidence Lab exposes the details on demand. Audit results are loaded only when source and artifact fingerprints match. CI runs desktop Chromium integration tests as well as scientific tests and frontend checks.
+The additional [reliability audit](docs/RELIABILITY_AUDIT.md) preserves the frozen model weights and headline evidence. It adds calibration group counts, descriptive Wilson intervals, Brier intervals and a training-only prevalence baseline, separate-repeat metrics, and local SHAP seed/computation/background sensitivity on four predefined held-out profiles. Model evidence exposes the details on demand. Audit results are loaded only when source and artifact fingerprints match. CI runs desktop Chromium integration tests as well as scientific tests and frontend checks.
 
 ```powershell
 cd web
@@ -123,15 +125,17 @@ Held-out demo rows are excluded from displayed models and explanation background
 - [Final strict rubric audit](docs/FINAL_AUDIT.md) and [completed investigation / before-after results](docs/FINAL_AUDIT_RESULTS.md): the additional elastic-net, HistGradientBoosting and CatBoost batch found no material expanded-policy gain; all deployed model artifacts remain unchanged. [Literature comparison](docs/MODEL_OPTIMIZATION_RESEARCH.md) explains why the vessel AUCs are not a proven ceiling. Audit-only code/results are isolated in `experiments/final_audit/`; verify without CatBoost using `python -m experiments.final_audit.verify`.
 - [Devpost copy](docs/DEVPOST_COPY.md) and timed demo opening are ready for submitter review. The required final YouTube video and actual entry/repository links remain outstanding.
 
-- [Offline review hub](review/index.html): ten real product screenshots, complete model metrics/fold dispersion, methodology, 3D provenance and [completion summary](review/COMPLETION_SUMMARY.md). Build a verified repo ZIP with `python scripts/package_review.py`; recapture screenshots from the running app with `node scripts/capture_review.mjs`.
+- [Offline review hub](review/index.html): eleven real product screenshots, complete model metrics/fold dispersion, methodology, 3D provenance and [completion summary](review/COMPLETION_SUMMARY.md). Build a verified repo ZIP with `python scripts/package_review.py`; recapture screenshots from the running app with `node scripts/capture_review.mjs`.
 - [Six-page technical report](report/VesselRisk-Track-A.pdf), generated from real evidence and browser screenshots with `python scripts/build_report.py`.
-- [Five-minute demo storyboard](demo/DEMO_SCRIPT.md), covering live prediction, anatomy, explanations, evidence, leakage and a held-out failure.
+- [Second-by-second 7:00 recording script](demo/DEMO_SCRIPT.md): 37 scenes from local startup through example prediction, manual custom inputs, 3D interaction and every Model evidence section.
+- [English narration](demo/DEMO_NARRATION_EN.md) and [fixed timing source](demo/DEMO_TIMELINE.json) for later TTS/subtitle production. Recording fixtures and [desktop rehearsal results](demo/DEMO_REHEARSAL.json) are included; these synthetic profiles test software behavior, not clinical accuracy.
 - [Data/model card and limitations](docs/DATA_MODEL_CARD.md).
 - [Architecture and Mermaid source](docs/ARCHITECTURE.md).
 - [Prior-winner research and primary references](docs/RESEARCH.md).
 - [Licenses and asset attribution](ATTRIBUTIONS.md).
 - [Final submission checklist](docs/SUBMISSION_CHECKLIST.md).
 - [Verification record](docs/VERIFICATION.md).
+- [Public submission contents](docs/SUBMISSION_CONTENTS.md): retained runtime files and excluded local development artifacts. Run `python scripts/submission_files.py --tracked` before publishing; generated review ZIPs belong in release attachments, rather than inside the source repository.
 
 The final 3–10 minute YouTube recording/upload and competition submission require the submitter's account. No video link or remote deployment is fabricated. Local software is fully integrated and does not depend on cloud credentials.
 

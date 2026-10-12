@@ -28,7 +28,7 @@ try {
   await shot('01-dashboard', 'Real held-out mixed-vessel case; all four predictions and LAD explanation.');
   await page.screenshot({ path: path.join(root, 'demo/screenshots/patient-workspace.png'), fullPage: true, animations: 'disabled' });
   await page.locator('.heart-viewer').screenshot({ path: path.join(root, 'demo/screenshots/coronary-anatomy.png'), animations: 'disabled' });
-  await shot('02-lad-shap', 'LAD selected; calibrated probability, model family and local SHAP in percentage points.', page.locator('.explanation-panel'));
+  await shot('02-lad-shap', 'Patient prediction: LAD probability, contribution accounting, top influences, model disagreement and refitted range.', page.locator('.explanation-panel'));
   await page.getByRole('combobox', { name: 'View prediction target' }).selectOption('LCX');
   await expect(page.getByRole('heading', { name: 'Left circumflex', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'X-ray', exact: true }).click();
@@ -44,6 +44,7 @@ try {
   await shot('05-expanded-heart', 'Expanded real 3D coronary anatomy; 63 source structures, individually mapped territories.');
   await page.getByRole('button', { name: 'Exit expanded anatomy' }).click();
   await page.getByRole('button', { name: 'Model evidence', exact: true }).click();
+  await shot('11-model-evidence-overview', 'Fixed model evidence: training and validation workflow, four-target performance and scientific limits, independent of patient edits.');
   await page.getByRole('tab', { name: 'Validation', exact: true }).click();
   await page.getByRole('tab', { name: 'CAD', exact: true }).click();
   await expect(page.locator('.auc-feature')).toContainText('0.925');
