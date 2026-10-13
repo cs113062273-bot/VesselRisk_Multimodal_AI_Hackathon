@@ -6,13 +6,13 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = {
-    '.dockerignore', '.gitattributes', '.gitignore', 'AGENTS.md', 'ATTRIBUTIONS.md',
-    'Dockerfile.api', 'LICENSE', 'README.md', 'Track A.pdf', 'compose.yaml',
+    '.dockerignore', '.gitattributes', '.gitignore', 'ATTRIBUTIONS.md',
+    'Dockerfile.api', 'LICENSE', 'README.md', 'compose.yaml',
     'pytest.ini', 'requirements.txt', 'requirements-dev.txt', 'train.py',
 }
 SOURCE_DIRS = {
     '.github', 'api', 'data', 'demo', 'docs', 'experiments',
-    'extention+of+z+alizadeh+sani+dataset', 'ml', 'report', 'review', 'scripts', 'tests', 'web',
+    'extention+of+z+alizadeh+sani+dataset', 'ml', 'report', 'scripts', 'tests', 'web',
 }
 EXCLUDED_DIRS = {
     '.git', '.venv', 'node_modules', '__pycache__', '.pytest_cache', '.next',
@@ -23,10 +23,14 @@ EXCLUDED_FILES = {
     'docs/VISUAL_INTERACTION.md', 'docs/VISUAL_POLISH.md',
     'scripts/capture_first_look.mjs', 'scripts/capture_polish.mjs',
     'review/FILE_MANIFEST.json', 'review/RESEARCH_THRESHOLDS.json',
+    'docs/DEVPOST_COPY.md', 'docs/FINAL_AUDIT.md', 'docs/FINAL_AUDIT_RESULTS.md',
+    'docs/MODEL_OPTIMIZATION_RESEARCH.md', 'docs/SUBMISSION_CHECKLIST.md',
+    'docs/SUBMISSION_CONTENTS.md', 'docs/VERIFICATION.md',
+    'web/AGENTS.md', 'web/CLAUDE.md',
+    'experiments/final_audit/verification.json',
 }
 DEMO_SCREENSHOTS = {
-    'patient-workspace.png', 'coronary-anatomy.png', 'focused-lad.png',
-    'focused-lcx.png', 'focused-rca.png', 'prediction-changes.png',
+    'patient-workspace.png', 'coronary-anatomy.png',
 }
 ARTIFACTS = {
     'CAD.joblib', 'LAD.joblib', 'LCX.joblib', 'RCA.joblib', 'ood.joblib',
@@ -43,6 +47,7 @@ REQUIRED = {
     'ml/__init__.py', 'ml/schema.py', 'ml/modeling.py', 'ml/train.py',
     'ml/integrity.py', 'ml/compatibility.py', 'ml/reliability.py', 'ml/reproducibility.py',
     'experiments/reliability/results.json', 'experiments/vessel_refinement/results.json',
+    'experiments/final_audit/execution.json',
     'web/package.json', 'web/package-lock.json', 'web/next.config.ts', 'web/tsconfig.json',
     'web/app/page.tsx', 'web/app/layout.tsx', 'web/app/api/[...path]/route.ts',
     'web/lib/target-colors.ts', 'web/components/HeartViewer.tsx',
@@ -50,10 +55,6 @@ REQUIRED = {
     'web/components/ModelEvidenceOverview.tsx', 'web/lib/input-provenance.ts',
     'web/public/anatomy/heart.bin', 'web/public/anatomy/manifest.json',
     'web/public/anatomy/UPSTREAM_ATTRIBUTION.md', 'report/VesselRisk-Track-A.pdf',
-    'review/index.html', 'review/START_HERE.md', 'review/COMPLETION_SUMMARY.md',
-    'review/BUILD_VALIDATION.json', 'review/screenshots/index.json',
-    'demo/DEMO_SCRIPT.md', 'demo/DEMO_NARRATION_EN.md',
-    'demo/DEMO_TIMELINE.json', 'demo/DEMO_REHEARSAL.json',
     'demo/CUSTOM_PROFILE_START.json', 'demo/CUSTOM_PROFILE_FINAL.json',
 } | {f'ml/artifacts/{name}' for name in ARTIFACTS}
 
@@ -77,6 +78,8 @@ def included(name):
         return False
     if parts[:2] == ('demo', 'screenshots'):
         return len(parts) == 3 and path.name in DEMO_SCREENSHOTS
+    if parts[0] == 'demo':
+        return name in {'demo/CUSTOM_PROFILE_START.json', 'demo/CUSTOM_PROFILE_FINAL.json'}
     if parts[:2] == ('ml', 'artifacts'):
         return len(parts) == 3 and path.name in ARTIFACTS
     return path.suffix.lower() in {

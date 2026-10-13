@@ -41,11 +41,30 @@ track-page-*.png
 /demo/screenshots/*
 !/demo/screenshots/patient-workspace.png
 !/demo/screenshots/coronary-anatomy.png
-!/demo/screenshots/focused-lad.png
-!/demo/screenshots/focused-lcx.png
-!/demo/screenshots/focused-rca.png
-!/demo/screenshots/prediction-changes.png
 web/.next-dev/
 
 # User-provided recording references are local preparation assets.
 /image*.png
+
+# Local demo recordings and rendered video deliverables (submitted via YouTube).
+/MutiModelAi_demo.mp4
+/demo/video/
+
+# Authoring instructions and submission preparation stay local.
+/AGENTS.md
+/Track A.pdf
+/web/AGENTS.md
+/web/CLAUDE.md
+/review/
+/demo/DEMO_SCRIPT.md
+/demo/DEMO_NARRATION_EN.md
+/demo/DEMO_TIMELINE.json
+/demo/DEMO_REHEARSAL.json
+/docs/DEVPOST_COPY.md
+/docs/FINAL_AUDIT.md
+/docs/FINAL_AUDIT_RESULTS.md
+/docs/MODEL_OPTIMIZATION_RESEARCH.md
+/docs/SUBMISSION_CHECKLIST.md
+/docs/SUBMISSION_CONTENTS.md
+/docs/VERIFICATION.md
+/experiments/final_audit/verification.json

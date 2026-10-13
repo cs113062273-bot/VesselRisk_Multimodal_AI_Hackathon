@@ -9,8 +9,16 @@ import ModelEvidenceOverview from './ModelEvidenceOverview';
 import styles from './ModelEvidence.module.css';
 import { TARGET_COLORS, targetColorStyle } from '@/lib/target-colors';
 
+function CurvePoint({cx,cy,fill,radius=2.5}:{cx?:number;cy?:number;fill?:string;radius?:number}){
+  if(cx===undefined||cy===undefined)return null;
+  return <g>
+    <circle cx={cx} cy={cy} r={8} fill="transparent" pointerEvents="all"/>
+    <circle cx={cx} cy={cy} r={radius} fill={fill} pointerEvents="none"/>
+  </g>;
+}
+
 function Curve({data,title,subtitle,color='#138c91',type='roc',baseline}:{data:Point[];title:string;subtitle:string;color?:string;type?:'roc'|'pr'|'calibration';baseline?:number}){
-  return <section className="curve-section"><h3>{title}</h3><p>{subtitle}</p><div className="curve-chart"><ResponsiveContainer width="100%" height="100%"><ScatterChart margin={{top:12,right:15,bottom:28,left:0}}><CartesianGrid stroke="#e7edf0" strokeDasharray="3 3"/><XAxis type="number" dataKey="x" domain={[0,1]} ticks={[0,.25,.5,.75,1]} tick={{fontSize:10,fill:'#78909b'}} axisLine={false} tickLine={false} label={{value:type==='roc'?'False positive rate':type==='pr'?'Recall':'Predicted probability',position:'bottom',offset:12,fontSize:11,fill:'#607482'}}/><YAxis type="number" dataKey="y" domain={[0,1]} ticks={[0,.25,.5,.75,1]} width={35} tick={{fontSize:10,fill:'#78909b'}} axisLine={false} tickLine={false}/><Tooltip formatter={(v)=>Number(v).toFixed(3)} cursor={{strokeDasharray:'3 3'}}/>{type==='pr'?<ReferenceLine y={baseline??0} stroke="#b8c4cb" strokeDasharray="4 4"/>:<ReferenceLine segment={[{x:0,y:0},{x:1,y:1}]} stroke="#b8c4cb" strokeDasharray="4 4"/>}<Scatter name={title} data={data} fill={color} line={{stroke:color,strokeWidth:2.5}} isAnimationActive={false} shape={type==='calibration'?'circle':()=> <g/>}/></ScatterChart></ResponsiveContainer></div></section>;
+  return <section className="curve-section"><h3>{title}</h3><p>{subtitle}</p><div className="curve-chart"><ResponsiveContainer width="100%" height="100%"><ScatterChart margin={{top:12,right:15,bottom:28,left:0}}><CartesianGrid stroke="#e7edf0" strokeDasharray="3 3"/><XAxis type="number" dataKey="x" domain={[0,1]} ticks={[0,.25,.5,.75,1]} tick={{fontSize:10,fill:'#78909b'}} axisLine={false} tickLine={false} label={{value:type==='roc'?'False positive rate':type==='pr'?'Recall':'Predicted probability',position:'bottom',offset:12,fontSize:11,fill:'#607482'}}/><YAxis type="number" dataKey="y" domain={[0,1]} ticks={[0,.25,.5,.75,1]} width={35} tick={{fontSize:10,fill:'#78909b'}} axisLine={false} tickLine={false}/><Tooltip formatter={(v)=>Number(v).toFixed(3)} cursor={{strokeDasharray:'3 3'}}/>{type==='pr'?<ReferenceLine y={baseline??0} stroke="#b8c4cb" strokeDasharray="4 4"/>:<ReferenceLine segment={[{x:0,y:0},{x:1,y:1}]} stroke="#b8c4cb" strokeDasharray="4 4"/>}<Scatter name={title} data={data} fill={color} line={{stroke:color,strokeWidth:2.5}} isAnimationActive={false} shape={<CurvePoint radius={type==='calibration'?4:2.5}/>} activeShape={<CurvePoint radius={4}/>}/></ScatterChart></ResponsiveContainer></div></section>;
 }
 
 export default function EvidenceLab({evidence,registry}:{evidence:Evidence;registry:Registry}){

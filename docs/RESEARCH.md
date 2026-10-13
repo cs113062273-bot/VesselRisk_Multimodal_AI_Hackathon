@@ -1,23 +1,14 @@
-# What prior successful submissions demonstrated
+# Technical references
 
-Research performed against public primary materials on 2026-10-02. This is design calibration, not proof that a particular feature causes a win.
+These sources support the dataset, validation procedure, explanation method, and anatomical assets used by VesselRisk.
 
-- [Organizer's winner announcement](https://www.linkedin.com/posts/ihubiitmandi_multimodalai-hackathon-iitmandi-activity-7406989681428656128-irXj) identifies Smart Scribe / Ult4 as first and Yoga Maya / Dropout Society as fifth. Team/project names vary between the announcement and repositories.
-- [Smart Scribes repository](https://github.com/Kartavya728/Smart-Scribes) exposes a full Python-to-Next.js workflow, an architecture image and demo/install/documentation links. Its [15-slide presentation](https://drive.google.com/file/d/1ddnYoN5SRydPX6gg-2T6K_LbyNhOXlyg/view) was downloaded and read, including annotated role-specific application screenshots. The [demo](https://youtu.be/DzG_FQJkbAA) is public; its playback/transcript was not independently reviewed. Current repository contents are not a verified competition-time snapshot. Survey percentages in the deck are author claims, not independently audited results.
-- [YogMaya repository](https://github.com/Aman071106/dropout_society) contains interface imagery, screen recordings, install instructions and a [demo link](https://youtu.be/mdsIb63s6k0). Its README reports pose matching and latency measurements; those benchmarks were not reproduced. Its public dashboard diagram includes planned features, so breadth should not be confused with implemented completeness.
+- **Competition:** [official rules](https://multimodal-ai-hackathon-2026-7.devpost.com/rules) and [Track A specification](https://drive.google.com/file/d/1T9Whog4kWF3mYB7ZMGyihGWpbJBJtsfz/view).
+- **Dataset:** [UCI Extension of Z-Alizadeh Sani](https://archive.ics.uci.edu/dataset/411/extention+of+z+alizadeh+sani+dataset), DOI [10.24432/C5461K](https://doi.org/10.24432/C5461K). The original workbook supplies the labels and input definitions.
+- **Nested validation:** [scikit-learn nested cross-validation example](https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html). Model selection belongs inside the training partitions.
+- **Calibration:** [scikit-learn probability calibration](https://scikit-learn.org/stable/modules/calibration.html). Sigmoid calibration is fitted inside training partitions; raw and isotonic scores are reported as comparisons.
+- **Thresholds:** [scikit-learn threshold tuning](https://scikit-learn.org/1.7/modules/classification_threshold.html). Research thresholds use training data and are evaluated separately from the fixed 0.50 results.
+- **SHAP:** [PermutationExplainer documentation](https://shap.readthedocs.io/en/latest/generated/shap.PermutationExplainer.html). VesselRisk explains the selected model's calibrated probability using training-only background patients.
+- **Saved models:** [scikit-learn model persistence](https://scikit-learn.org/1.7/model_persistence.html). The pinned environment and startup compatibility checks prevent loading models with an incompatible scikit-learn version.
+- **Anatomy:** [BodyParts3D license](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html), [BodyParts3D paper](https://doi.org/10.1093/nar/gkn613), and the [pinned human-atlas geometry revision](https://github.com/ashemag/human-atlas/tree/1c38bf35c254a891200d3cedecfd57abebe83d8d). Source mesh IDs and transformations are recorded in the anatomy manifest.
 
-Applied lessons: show a concrete user journey, connect inputs to visible output, present measured evidence with scope, expose reproducibility and package the final demo/report together. VesselRisk uses independent coronary anatomy and clinical validation; it reuses none of these projects' code, branding, screenshots or claimed metrics. No chatbot/authentication feature was added just because prior entries had one.
-
-Technical references consulted:
-
-- [Official UCI dataset and license](https://archive.ics.uci.edu/dataset/411/extention+of+z+alizadeh+sani+dataset), DOI 10.24432/C5461K.
-- [Nested CV guidance](https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html).
-- [Probability calibration guidance](https://scikit-learn.org/stable/modules/calibration.html), including the small-sample limitations of isotonic regression.
-- [SHAP API](https://shap.readthedocs.io/en/latest/generated/shap.Explainer.html).
-- [Threshold tuning guidance](https://scikit-learn.org/1.7/modules/classification_threshold.html): tune within training data; do not reuse the classifier's fitting data as a threshold validation set.
-- [Model persistence compatibility](https://scikit-learn.org/1.7/model_persistence.html): persisted sklearn artifacts require their training environment; startup now checks the registry version before loading.
-- [Official BodyParts3D license](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html), CC BY 4.0; [geometry derivative](https://github.com/ashemag/human-atlas/tree/1c38bf35c254a891200d3cedecfd57abebe83d8d).
-
-The supplied Track A.pdf is the official implementation authority. The workbook, not an internet summary, determines the actual labels and schema.
-
-Final audit: [Model optimization literature review](MODEL_OPTIMIZATION_RESEARCH.md) compares the 2020 same-cohort vessel study, the 2018 500-patient study, ALEC, and primary methodology references without equating incompatible results. [Completed results](FINAL_AUDIT_RESULTS.md) report the additional predeclared elastic-net/histogram/CatBoost batch, negative primary verdict and unconfirmed RCA shrinkage lead. The prior-winner slide deck was re-read in full; video playback remains unreviewed.
+The measured results are in `ml/artifacts/evidence.json`. The report and Model evidence display these records rather than values copied from published studies.

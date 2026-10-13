@@ -99,7 +99,7 @@ test('edited inputs keep explanations explicitly stale until the new response ar
   await expect(page.getByRole('button', { name: 'Export case', exact: true })).toBeEnabled();
   await page.locator('.explanation-panel').getByRole('tab', { name: 'LCX', exact: true }).click();
   const explanation = page.locator('.explanation-panel');
-  const age = explanation.locator('.contribution-row').filter({ hasText: 'Age' });
+  const age = explanation.locator('.contribution-row:visible').filter({ hasText: 'Age' }).first();
   await expect(age).toContainText('54 years');
   await expect(page.getByRole('button', { name: 'Expand patient profile' })).toHaveAttribute('aria-expanded', 'false');
   await page.getByRole('button', { name: 'Expand patient profile' }).click();
@@ -121,7 +121,7 @@ test('edited inputs keep explanations explicitly stale until the new response ar
   releaseResponse();
   await expect(explanation.getByRole('status')).toHaveCount(0);
   await expect(page.locator('#patient-profile-body')).toBeHidden();
-  await explanation.getByRole('button', { name: 'View all 55 contributions' }).click();
+  await explanation.locator('.model-details > summary').click();
   await expect(age).toContainText('85 years');
   await page.getByRole('button', { name: 'Expand patient profile' }).click();
   await expect(page.getByLabel('Age', { exact: true })).toHaveValue('85');
